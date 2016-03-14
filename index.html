@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="js/jquery.contextMenu.min.css">
+<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="css/bootstrap-theme.min.css">
+<link rel="stylesheet" type="text/css" href="css/normalize.css">
+<link rel="stylesheet" type="text/css" href="css/rally.css">
+</head>
+<body>
+<div class="container">
+<table class="table table-condensed" id="instructions" tabindex="1">
+<thead>
+</thead>
+<tbody>
+</tbody>
+</table>
+<form class="form-inline">
+    <div class="form-group">
+        <button type="button" class="btn btn-default btn-sm" id="add-instruction" tabindex="2">
+        <span class="glyphicon glyphicon-plus-sign"></span>
+        Add
+        </button>
+        <button type="button" class="btn btn-default btn-sm" id="edit-instruction" tabindex="3">
+        <span class="glyphicon glyphicon-pencil"></span>
+        Edit
+        </button>
+    </div><br>
+    <div class="form-group">
+        <label>Rally speed <input type="text" size="3" class="form-control" tabindex="4"> </label>
+    </div>
+</form>
+
+    <div class="panel panel-default">
+        <div class="panel-heading">Visible columns</div>
+        <div class="panel-body">
+            <ul id="hideshow">
+            </ul>
+        </div>
+    </div>
+
+    <h3>Todo</h3>
+    <ul>
+        <li>Keyboard input for non-edit mode (Move handler to common code and provide target/state argument?)</li>
+        <li>Add keyboard handler for quickly adding rows (KP_PLUS/KP_MINUS for insert after/before?)</li>
+        <li>UPDATE DB WHEN INPUT VALUE CHANGES</li>
+        <li>Highlight color for important value changes (.warning? .purple for CAS?)</li>
+    </ul>
+</div>
+
+<script src="js/jquery.min.js"></script>
+<script src="js/jquery.floatThead.min.js"></script>
+<script src="js/jquery.contextMenu.min.js"></script>
+<script src="js/jquery.ui.position.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/dexie.js"></script>
+<script src="js/rally_ui.js"></script>
+<script src="js/rally.js"></script>
+<script type="text/javascript">
+var rally = new Rally();
+
+Dexie.Promise.on('error', function(err) {
+    // Log to console or show en error indicator somewhere in your GUI...
+    console.log("Uncaught error: " + err);
+});
+
+rally.ui.renderInstructionsHeader();
+rally.ui.editMode(false);
+
+rally.ui.showColumn(1, false);
+rally.ui.showColumn(2, false);
+rally.ui.showColumn(8, false);
+rally.ui.showColumn(9, false);
+</script>
+</body>
+</html>

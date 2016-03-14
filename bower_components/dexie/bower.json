@@ -1,0 +1,30 @@
+{
+  "name": "dexie",
+  "homepage": "http://dexie.org",
+  "authors": [
+    "David Fahlander"
+  ],
+  "description": "Minimalistic IndexedDB API with bullet proof transactions",
+  "main": "dist/dexie.min.js",
+  "moduleType": [
+    "amd",
+    "es6",
+    "node",
+    "globals"
+  ],
+  "keywords": [
+    "indexeddb",
+    "browser",
+    "database"
+  ],
+  "license": "Apache-2.0",
+  "ignore": [
+    "**/.*",
+    "src/",
+    "test/",
+    "samples/",
+    "build/",
+    "addons/",
+    "*.njsproj"
+  ]
+}

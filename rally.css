@@ -1,0 +1,30 @@
+ul#hideshow {
+    list-style: none;
+    padding: 1em;
+}
+
+ul#hideshow label {
+    display: list-item;
+}
+
+.floatThead-container, table#instructions thead {
+    background: white;
+}
+
+td.edit input {
+    display: table-cell;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+}
+
+th {
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none;   /* Chrome/Safari/Opera */
+  -khtml-user-select: none;    /* Konqueror */
+  -moz-user-select: none;      /* Firefox */
+  -ms-user-select: none;       /* IE/Edge */
+  user-select: none;           /* non-prefixed version, currently
+                                  not supported by any browser */
+}
