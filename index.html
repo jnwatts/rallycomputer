@@ -61,8 +61,7 @@
 var rally = new Rally();
 
 Dexie.Promise.on('error', function(err) {
-    // Log to console or show en error indicator somewhere in your GUI...
-    console.log("Uncaught error: " + err);
+    console.log(err.stack || err);
 });
 
 rally.ui.renderInstructionsHeader();
