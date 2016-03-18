@@ -18,6 +18,13 @@ function RallyUI(rally) {
     $('#instructions').on('keydown', function (e) {
         console.log('TODO: For keys relating to cells, determine current cell and invoke cell keydown; others handle directly');
     });
+
+    var rally_speed = $('#edit-rally-speed');
+    rally_speed.on('blur', function (e) {
+        rally.rallySpeed($(this).val());
+    });
+    rally_speed.val(rally.rallySpeed());
+
 }
 
 RallyUI.prototype = {

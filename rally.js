@@ -113,6 +113,17 @@ Rally.prototype = {
         return Number.parseFloat(val);
     },
 
+    rallySpeed: function(val) {
+        if (arguments.length > 0) {
+            this.setConfig('rally_speed', val);
+        }
+        val = this.getConfig('rally_speed');
+        if (val == null) {
+            val = 1;
+        }
+        return Number.parseInt(val);
+    },
+
     adjustMilleage: function(val) {
         return Number.parseFloat(val) * this.odomFactor();
     },
