@@ -112,7 +112,7 @@ RallyUI.prototype = {
                     callback: function (key, opt) {
                         var tr = this.closest('tr');
                         var instr = instrFromRow(tr);
-                        ui.rally.addInstruction(instr - 0.5, 0);
+                        ui.rally.addInstruction(instr - 0.5);
                         return true;
                     },
                 },
@@ -121,7 +121,7 @@ RallyUI.prototype = {
                     callback: function (key, opt) {
                         var tr = this.closest('tr');
                         var instr = instrFromRow(tr);
-                        ui.rally.addInstruction(instr + 0.5, 0);
+                        ui.rally.addInstruction(instr + 0.5);
                         return true;
                     },
                 },
