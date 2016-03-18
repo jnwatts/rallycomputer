@@ -5,7 +5,7 @@ function Rally() {
 }
 
 Rally.prototype = {
-    db_columns: [ 'instr', 'raw_mlg', 'cas', 'delay', 'mlg', 'abs_time', 'is_omp', 'is_cp' ],
+    db_columns: [ 'instr', 'raw_mlg', 'cas', 'delay', 'mlg', 'time'],
     instructions: [ ],
 
     init: function() {
@@ -16,8 +16,6 @@ Rally.prototype = {
             .stores({
                 instructions: Rally.prototype.db_columns.join()
             });
-
-        db.instructions.mapToClass(RallyInstruction);
 
         // Open the database
         db.open()
@@ -30,7 +28,8 @@ Rally.prototype = {
         var rally = this;
         var prev = null;
         rally.instructions = [];
-        this.db.instructions.each(function (instr) {
+        this.db.instructions.each(function (row) {
+            var instr = new RallyInstruction(row);
             instr.calculate(rally, prev);
             rally.instructions[instr.instr] = instr;
             instr.prev = prev;
@@ -47,38 +46,37 @@ Rally.prototype = {
         var row = new Object();
 
         row.instr = Number.parseFloat(arguments[0]);
-        row.raw_mlg = Number.parseFloat(arguments[1]);
 
+        row.raw_mlg = null;
         row.cas = null;
         row.delay = null;
         row.mlg = null;
-        row.abs_time = null;
-        row.is_cp = false;
-        row.is_omp = false;
+        row.time = null;
 
         switch (arguments.length) {
-            case 8:
-                row.is_cp = !!arguments[7];
-            case 7:
-                row.is_omp = !!arguments[6];
             case 6:
-                row.abs_time = Number.parseInt(arguments[5]);
+                row.time = Number.parseInt(arguments[5]);
             case 5:
                 row.mlg = Number.parseFloat(arguments[4]);
             case 4:
                 row.delay = Number.parseFloat(arguments[3]);
             case 3:
                 row.cas = Number.parseInt(arguments[2]);
+            case 2:
+                row.raw_mlg = Number.parseFloat(arguments[1]);
                 break;
         }
 
         var rally = this;
         this.db.instructions.put(row).then(function () {rally.calculate();});
+    },
 
-        //this.db.instructions.where('instr').equals(row.instr).first(function (instr) {
-            //rally.instructions[instr.instr] = instr;
-            //rally.ui.renderInstruction(instr);
-        //});
+    setValue: function (instr, col_index, val) {
+        var rally = this;
+        var col = RallyInstruction.prototype.columnDefs[col_index];
+        var obj = {};
+        obj[col.name] = val;
+        this.db.instructions.update(instr, obj).then(function () { rally.calculate(); });
     },
 
     sortedKeys: function() {
@@ -147,45 +145,32 @@ Rally.prototype = {
 };
 
 
-function RallyInstruction() {
+function RallyInstruction(row) {
+    Object.assign(this, row, {
+        columns: [],
+        prev: null,
+        next: null,
+    });
+
+    var rally = this;
+    this.columns = this.columnDefs.map(function (d) { return d.cloneWith(rally); });
 }
+
 RallyInstruction.prototype = {
-    props: {
-        instr: 0,
-        raw_mlg: 1,
-        raw_d_mlg: 2,
-        mlg: 3,
-        d_mlg: 4,
-        cas: 5,
-        delay: 6,
-        tod: 7,
-        time: 8,
-        d_time: 9,   
-    },
+    columnDefs: [],
 
-    labels: [
-        'Instr',
-        'Raw Mlg',
-        'Raw &Delta;Mlg',
-        'Mlg',
-        '&Delta;Mlg',
-        'CAS',
-        'Delay',
-        'TOD',
-        'Time',
-        '&Delta;Time',
-    ],
-
-    values: [],
-
-    calculated: [],
-
-    prev: null,
-
-    next: null,
-
-    save: function() {
-        console.log("TODO: Save RallyInstruction");
+    col: function(index) {
+        var result = null;
+        var int_index = -1;
+        if (typeof index == 'string') {
+            int_index = this.columns.findIndex(function (v) { return (v.name == index); });
+        } else {
+            int_index = index;
+        }
+        if (int_index < 0 || int_index >= this.columns.length) {
+            throw new Error('Invalid index: ' + index);
+        }
+        return this.columns[int_index];
     },
 
     formatMilleage: function(val, places) {
@@ -207,88 +192,191 @@ RallyInstruction.prototype = {
         var minutes = ~~(seconds / 60);
         return minutes + ':' + Math.round(seconds * 100) / 100;
     },
-    
+
     calculate: function(rally, prev) {
-        //[ 'instr', 'raw_mlg', 'cas', 'delay', 'mlg', 'abs_time', 'is_omp', 'is_cp' ]
-
-        this.calculated = Array();
-        for (var p in this.props) {
-            this.calculated[this.props[p]] = true;
-        }
-        this.calculated[0] = false;
-        this.calculated[1] = false;
-
-        if (prev) {
-            this.raw_d_mlg = this.raw_mlg - prev.raw_mlg;
-        } else {
-            this.raw_d_mlg = 0;
-        }
-        this.d_mlg = rally.adjustMilleage(this.raw_d_mlg);
-
-        if (this.mlg == null) {
-            if (prev) {
-                this.mlg = prev.mlg + this.d_mlg;
-            } else {
-                this.mlg = 0;
-            }
-        } else {
-            this.calculated[this.props.mlg] = false;
-        }
-
-        if (this.cas == null) {
-            if (prev) {
-                this.cas = prev.cas;
-            } else {
-                this.cas = 0;
-            }
-        } else {
-            this.calculated[this.props.cas] = false;
-        }
-
-        if (this.delay == null) {
-            this.delay = 0;
-        } else {
-            this.calculated[this.props.delay] = false;
-        }
+        var instr = this.col('instr');
+        var raw_mlg = this.col('raw_mlg');
+        var raw_d_mlg = this.col('raw_d_mlg');
+        var mlg = this.col('mlg');
+        var d_mlg = this.col('d_mlg');
+        var cas = this.col('cas');
+        var delay = this.col('delay');
+        var tod = this.col('tod');
+        var time = this.col('time');
+        var d_time = this.col('d_time');
 
         if (prev) {
-            this.d_time = (this.raw_d_mlg * 3600) / prev.cas + this.delay;
-        } else {
-            this.d_time = 0;
+            p = new Object();
+            p.instr = prev.col('instr');
+            p.raw_mlg = prev.col('raw_mlg');
+            p.raw_d_mlg = prev.col('raw_d_mlg');
+            p.mlg = prev.col('mlg');
+            p.d_mlg = prev.col('d_mlg');
+            p.cas = prev.col('cas');
+            p.delay = prev.col('delay');
+            p.tod = prev.col('tod');
+            p.time = prev.col('time');
+            p.d_time = prev.col('d_time');
+            prev = p;
         }
 
-        if (this.abs_time == null) {
-            if (prev) {
-                this.abs_time = prev.abs_time + this.d_time;
-            } else {
-                this.abs_time = 0;
+        this.columns.forEach(function (c) {
+            if (c.isSet()) {
+                c.calculated_value = c.value;
             }
-        } else {
-            this.calculated[this.props.abs_time] = false;
-        }
+        });
 
-        if (this.tod == null) {
-            if (prev) {
-                this.tod = prev.tod + this.d_time;
-            } else {
-                this.tod = 0;
-            }
-        } else {
-            this.calculated[this.props.tod] = false;
-        }
+        var CalcPrev = function(col, default_value, calc_cb) {
+            this.calc = function() {
+                if (col.isSet()) {
+                    col.calculated_value = col.value;
+                } else if (prev && calc_cb) {
+                    col.calculated_value = calc_cb()
+                } else {
+                    col.calculated_value = default_value;
+                }
+            };
+        };
 
-        this.values = [
-            this.instr,
-            this.formatMilleage(this.raw_mlg),
-            this.formatMilleage(this.raw_d_mlg),
-            this.formatMilleage(this.mlg),
-            this.formatMilleage(this.d_mlg),
-            this.cas,
-            this.delay || '', // Empty cell when delay == 0
-            this.formatTime(this.tod),
-            this.formatDeltaTime(this.abs_time),
-            this.formatDeltaTime(this.d_time, 0),
+        var CalcCur = function(col, calc_cb) {
+            this.calc = function() {
+                col.calculated_value = calc_cb();
+            };
+        };
+
+        calcFunctions = [
+            new CalcPrev(raw_d_mlg, 0, function () {
+                var result = raw_mlg.calculated_value - prev.raw_mlg.calculated_value;
+                return (result < 0 ? 0 : result);
+            }),
+            new CalcCur(d_mlg, function() { return rally.adjustMilleage(raw_d_mlg.calculated_value); }),
+            new CalcPrev(mlg, 0, function () {
+                if (raw_mlg.calculated_value == 0) {
+                    return 0;
+                } else {
+                    return prev.mlg.calculated_value + d_mlg.calculated_value;
+                }
+            }),
+            new CalcPrev(cas, NaN, function () { return prev.cas.calculated_value; }),
+            new CalcPrev(delay, 0, null),
+            new CalcPrev(d_time, 0, function () { return (raw_d_mlg.calculated_value * 3600) / prev.cas.calculated_value + delay.calculated_value; }),
+            new CalcPrev(time, 0, function () { return prev.time.calculated_value + d_time.calculated_value; }),
+            new CalcPrev(tod, 0, function () {
+                var t = moment(prev.tod.calculated_value, ["h-m-s", "h-m", "H-m A"]);
+                t.add(d_time.calculated_value, 'seconds');
+                return t.format('HH:mm:ss');
+            }),
+            new CalcPrev(raw_mlg, 0, function () {
+                if (mlg.isSet() && raw_mlg.value == null) {
+                    return prev.raw_mlg.calculated_value + (mlg.calculated_value - prev.mlg.calculated_value);
+                } else {
+                    return 0;
+                }
+            }),
         ];
 
+        calcFunctions.forEach(function (f) {
+            f.calc();
+        });
     },
 };
+
+RallyInstruction.prototype.Column = function(index, name, label, is_db, format_cb) {
+    this.index = index;
+    this.name = name;
+    this.label = label;
+    this.is_db = is_db;
+    this.format_cb = format_cb;
+
+    Object.defineProperty(this, 'value', {
+        get: function() {
+            if (this.instance) {
+                return this.format_cb(this.instance[this.name]);
+            }
+        },
+        set: function(v) {
+            if (this.instance) {
+                this.instance[this.name] = this.format_cb(v);
+            }
+        },
+    });
+    Object.defineProperty(this, 'display_value', {
+        get: function() {
+            if (this.instance) {
+                return (this.isSet() ? this.value : this.calculated_value);
+            }
+        },
+    });
+};
+
+RallyInstruction.prototype.Column.prototype = {
+    index: null,
+    name: null,
+    label: null,
+    is_db: null,
+    calculated_value: null,
+    instance: null,
+
+    cloneWith: function(instance) {
+        var clone = new RallyInstruction.prototype.Column();
+        Object.assign(clone, this);
+        clone.instance = instance;
+        return clone;
+    },
+
+    isCalculated: function() {
+        if (!this.instance) {
+            throw "Instance not set";
+        }
+        return this.value == null;
+    },
+
+    isSet: function() {
+        if (!this.instance) {
+            throw "Instance not set";
+        }
+        return this.is_db && this.value != null;
+    },
+
+    toString: function() {
+        return this.display_value;
+    },
+};
+
+RallyInstruction.prototype.parseFloat = function(v) {
+    var result = Number.parseFloat(v);
+    if (isNaN(result)) {
+        result = null;
+    }
+    return result;
+}
+
+RallyInstruction.prototype.parseInt = function(v) {
+    var result = Number.parseInt(v);
+    if (isNaN(result)) {
+        result = null;
+    }
+    return result;
+}
+
+RallyInstruction.prototype.parseTime = function(v) {
+    var result = moment(v, ["h-m-s", "h-m", "H-m A"]);
+    if (result.isValid()) {
+        return result.format('HH:mm:ss');
+    } else {
+        return null;
+    }
+}
+
+RallyInstruction.prototype.columnDefs = [
+    new RallyInstruction.prototype.Column(0,   'instr',        'Instr',            true,    RallyInstruction.prototype.parseFloat),
+    new RallyInstruction.prototype.Column(1,   'raw_mlg',      'Raw Mlg',          true,    RallyInstruction.prototype.parseFloat),
+    new RallyInstruction.prototype.Column(2,   'raw_d_mlg',    'Raw &Delta;Mlg',   false,   RallyInstruction.prototype.parseFloat),
+    new RallyInstruction.prototype.Column(3,   'mlg',          'Mlg',              true,    RallyInstruction.prototype.parseFloat),
+    new RallyInstruction.prototype.Column(4,   'd_mlg',        '&Delta;Mlg',       false,   RallyInstruction.prototype.parseFloat),
+    new RallyInstruction.prototype.Column(5,   'cas',          'CAS',              true,    RallyInstruction.prototype.parseInt),
+    new RallyInstruction.prototype.Column(6,   'delay',        'Delay',            true,    RallyInstruction.prototype.parseFloat),
+    new RallyInstruction.prototype.Column(7,   'tod',          'TOD',              true,    RallyInstruction.prototype.parseTime),
+    new RallyInstruction.prototype.Column(8,   'time',         'Time',             false,   RallyInstruction.prototype.parseFloat),
+    new RallyInstruction.prototype.Column(9,   'd_time',       '&Delta;Time',      false,   RallyInstruction.prototype.parseFloat),
+];

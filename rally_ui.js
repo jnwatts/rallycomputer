@@ -8,7 +8,7 @@ function RallyUI(rally) {
         if (typeof last != 'undefined') {
             instr = Number.parseFloat(last) + 1;
         }
-        var instr = ui.rally.addInstruction(instr, 0);
+        var instr = ui.rally.addInstruction(instr);
     });
 
     $('#edit-instruction').on('click', function (e) {
@@ -66,23 +66,23 @@ RallyUI.prototype = {
         hideshow.children().remove();
 
         var tr = $('<tr />');
-        RallyInstruction.prototype.labels.forEach(function (label, index) {
-            var th = $('<th />').attr('data-col', index);
-            th.html(label);
+        RallyInstruction.prototype.columnDefs.forEach(function (col) {
+            var th = $('<th />').attr('data-col', col.index);
+            th.html(col.label);
 
             th.on('dblclick', function (e) {
-                ui.showColumn(index, false);
+                ui.showColumn(col.index, false);
             });
             tr.append(th);
 
             var input = $('<input type=checkbox checked/>');
             input.on('change', function (e) {
-                ui.showColumn(index, e.target.checked);
+                ui.showColumn(col.index, e.target.checked);
             });
 
-            hideshow.append($('<label />').attr('data-col', index).append(input).append(label));
+            hideshow.append($('<label />').attr('data-col', col.index).append(input).append(col.label));
 
-            ui.columnState[index] = true;
+            ui.columnState[col.index] = true;
         });
 
         thead.append(tr);
@@ -159,16 +159,9 @@ RallyUI.prototype = {
         var ui = this;
         var tr = $('<tr />').attr('data-row', instr.instr);
 
-        instr.values.forEach(function (val, index) {
+        instr.columns.forEach(function (col, index) {
             var td = $('<td />').attr('data-col', index);
-            if (index == 0) {
-                if (instr.is_omp) {
-                    td.addClass('omp');
-                } else if (instr.is_cp) {
-                    td.addClass('cp');
-                }
-            }
-            var calculated = instr.calculated[index];
+            var calculated = col.isCalculated();
             if (!calculated) {
                 td.addClass('notcalc');
             }
@@ -177,73 +170,26 @@ RallyUI.prototype = {
                 input.attr('type', 'text');
                 input.attr('size', 5);
                 if (calculated) {
-                    input.attr('placeholder', val);
+                    input.attr('placeholder', col.display_value);
                 } else {
-                    input.val(val);
+                    input.val(col.calculated_value);
                 }
                 input.on('keydown', function (e) {
-                    var handled = true;
-                    switch(e.keyCode) {
-                        case 33: // page up
-                            var i = instr;
-                            var count = 5;
-                            for (var count = 5; count > 0; count--) {
-                                if (i.prev) {
-                                    i = i.prev;
-                                }
-                            }
-                            if (i != instr) {
-                                ui.selectInstruction(i.instr, {row: i.instr, col: index});
-                            }
-                            break;
-                        case 34: // page down
-                            var i = instr;
-                            var count = 5;
-                            for (var count = 5; count > 0; count--) {
-                                if (i.next) {
-                                    i = i.next;
-                                }
-                            }
-                            if (i != instr) {
-                                ui.selectInstruction(i.instr, {row: i.instr, col: index});
-                            }
-                            break;
-                        case 38: // up
-                            if (instr.prev) {
-                                ui.selectInstruction(instr.prev.instr, {row: instr.prev.instr, col: index});
-                            }
-                            break;
-                        case 40: // down
-                            if (instr.next) {
-                                ui.selectInstruction(instr.next.instr, {row: instr.next.instr, col: index});
-                            }
-                            break;
-                        case 27: // escape
-                            ui.editMode(false);
-                            break;
-                        case 46: // delete
-                            if (e.shiftKey) {
-                                if (instr.next) {
-                                    ui.selectInstruction(instr.next.instr, {row: instr.next.instr, col: index});
-                                } else if (instr.prev) {
-                                    ui.selectInstruction(instr.prev.instr, {row: instr.prev.instr, col: index});
-                                }
-                                ui.editMode(false);
-                                ui.rally.deleteInstruction(instr.instr);
-                            }
-                            break;
-                        default:
-                            handled = false;
-                            break;
+                    ui.handleKeyDown(e, instr);
+                });
+                input.on('blur', function (e) {
+                    var val = null;
+                    if (input.val().length > 0) {
+                        val = input.val();
                     }
-                    if (handled) {
-                        e.stopPropagation();
-                        e.preventDefault();
+                    if (val != col.value) {
+                        ui.rally.setValue(instr.instr, col.index, val);
                     }
                 });
                 td.append(input);
                 td.addClass('edit');
             } else {
+                var val = col.toString();
                 td.html(val);
             }
             if (ui.selectedInstruction == instr.instr) {
@@ -273,6 +219,70 @@ RallyUI.prototype = {
             old_tr.remove();
         } else {
             tbody.append(tr);
+        }
+    },
+
+    handleKeyDown(e, instr) {
+        var ui = this;
+        var input = $(e.target);
+        var index = Number.parseFloat(input.closest('td').attr('data-col'));
+        var handled = true;
+        switch(e.keyCode) {
+            case 33: // page up
+                var i = instr;
+                var count = 5;
+                for (var count = 5; count > 0; count--) {
+                    if (i.prev) {
+                        i = i.prev;
+                    }
+                }
+                if (i != instr) {
+                    ui.selectInstruction(i.instr, {row: i.instr, col: index});
+                }
+                break;
+            case 34: // page down
+                var i = instr;
+                var count = 5;
+                for (var count = 5; count > 0; count--) {
+                    if (i.next) {
+                        i = i.next;
+                    }
+                }
+                if (i != instr) {
+                    ui.selectInstruction(i.instr, {row: i.instr, col: index});
+                }
+                break;
+            case 38: // up
+                if (instr.prev) {
+                    ui.selectInstruction(instr.prev.instr, {row: instr.prev.instr, col: index});
+                }
+                break;
+            case 40: // down
+                if (instr.next) {
+                    ui.selectInstruction(instr.next.instr, {row: instr.next.instr, col: index});
+                }
+                break;
+            case 27: // escape
+                ui.editMode(false);
+                break;
+            case 46: // delete
+                if (e.shiftKey) {
+                    if (instr.next) {
+                        ui.selectInstruction(instr.next.instr, {row: instr.next.instr, col: index});
+                    } else if (instr.prev) {
+                        ui.selectInstruction(instr.prev.instr, {row: instr.prev.instr, col: index});
+                    }
+                    ui.editMode(false);
+                    ui.rally.deleteInstruction(instr.instr);
+                }
+                break;
+            default:
+                handled = false;
+                break;
+        }
+        if (handled) {
+            e.stopPropagation();
+            e.preventDefault();
         }
     },
 
