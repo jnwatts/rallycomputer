@@ -17,6 +17,8 @@ cp -a bower_components/jquery.floatThead/dist/* public/js/
 
 cp -a bower_components/jQuery-contextMenu/dist/* public/js/
 
+cp -a bower_components/moment/min/*min* public/js/
+
 ln -snf ../index.html public/index.html
 
 ln -snf ../../rally.js public/js/
