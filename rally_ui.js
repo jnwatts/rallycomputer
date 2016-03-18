@@ -325,6 +325,14 @@ RallyUI.prototype = {
         if (isNaN(instr)) {
             instr = null;
         }
+        if (target) {
+            target.row = Number.parseFloat(target.row);
+            target.col = Number.parseInt(target.col);
+        }
+        if (old_instr != null) {
+            var old_tr = $('tr[data-row=\''+old_instr+'\']');
+            old_tr.find('input').trigger('blur');
+        }
         if (instr != null) {
             this.selectedInstruction = instr;
             this.renderInstruction(this.rally.instructions[instr]);
