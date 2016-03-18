@@ -25,14 +25,6 @@ ln -snf ../../rally.js public/js/
 ln -snf ../../rally_ui.js public/js/
 ln -snf ../../rally.css public/css/
 
+ln -snf ../rally.mf public/rally.mf
+
 cd public
-CACHE='rally.mf'
-echo "CACHE MANIFEST" >> $CACHE
-echo "" >> $CACHE
-echo "CACHE:" >> $CACHE
-find . -not \( -type d -o -name ${CACHE} \) >> $CACHE
-echo >> $CACHE
-echo "NETWORK:" >> $CACHE
-echo "*" >> $CACHE
-sed -i'' -e '#^\.$#d' $CACHE
-sed -i'' -e 's#^\./##' $CACHE
