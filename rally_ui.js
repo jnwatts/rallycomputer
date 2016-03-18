@@ -152,6 +152,7 @@ RallyUI.prototype = {
         this.rally.sortedKeys().forEach(function (i) {
             ui.renderInstruction(instructions[i]);
         });
+        $('#instructions').trigger( "resize" );
     },
 
     renderInstruction: function(instr) {
@@ -165,7 +166,7 @@ RallyUI.prototype = {
             if (!calculated) {
                 td.addClass('notcalc');
             }
-            if (ui.editState && ui.selectedInstruction == instr.instr) {
+            if (ui.editState && ui.selectedInstruction == instr.instr && col.is_db) {
                 var input = $('<input />');
                 input.attr('type', 'text');
                 input.attr('size', 5);
@@ -190,16 +191,39 @@ RallyUI.prototype = {
                 td.addClass('edit');
             } else {
                 var val = col.toString();
+                if (col.name == 'delay') {
+                    if (val == 0) {
+                        val = '';
+                    }
+                } else if (typeof val == 'number') {
+                    if (col.name == 'instr') {
+                        val = val.toFixed(1);
+                    } else if (col.name == 'd_time') {
+                        val = moment('0:0', 'm:s').add(val, 'seconds').format('m:ss');
+                    } else if (col.name != 'cas') {
+                        val = val.toFixed(3);
+                    }
+
+                }
                 td.html(val);
             }
-            if (ui.selectedInstruction == instr.instr) {
-                td.addClass('active');
+            if (col.name == 'd_mlg') {
+                if (val <= 0.15 && val > 0) {
+                    td.addClass('danger');
+                }
+            } else if (col.name == 'cas') {
+                if (val > 0 && val != rally.rallySpeed()) {
+                    td.addClass('warning');
+                }
             }
             tr.append(td);
 
             if (!ui.columnState[index])
                 td.hide();
         });
+        if (ui.selectedInstruction == instr.instr) {
+            tr.addClass('active');
+        }
 
         tr.on('click', function (e) {
             if (ui.selectedInstruction != instr.instr) {
