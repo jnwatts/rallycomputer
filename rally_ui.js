@@ -285,6 +285,8 @@ RallyUI.prototype = {
                     ui.selectInstruction(instr.prev.instr, {row: instr.prev.instr, col: index});
                 }
                 break;
+            case 13: // enter
+                input.trigger('blur');
             case 40: // down
                 var next = instr.next;
                 if (!next) {
