@@ -28,7 +28,7 @@ Rally.prototype = {
         var rally = this;
         var prev = null;
         rally.instructions = [];
-        this.db.instructions.each(function (row) {
+        return this.db.instructions.each(function (row) {
             var instr = new RallyInstruction(row);
             instr.calculate(rally, prev);
             rally.instructions[instr.instr] = instr;
@@ -68,7 +68,11 @@ Rally.prototype = {
         }
 
         var rally = this;
-        this.db.instructions.put(row).then(function () {rally.calculate();});
+        return this.db.instructions.put(row).then(function (row) {
+            return rally.calculate().then(function() {
+                return row;
+            });
+        });
     },
 
     setValue: function (instr, col_index, val) {
