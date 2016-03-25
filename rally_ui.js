@@ -3,12 +3,9 @@ function RallyUI(rally) {
     var ui = this;
 
     $('#add-instruction').on('click', function (e) {
-        var last = rally.sortedKeys().reverse()[0];
-        var instr = 1;
-        if (typeof last != 'undefined') {
-            instr = Number.parseFloat(last) + 1;
-        }
-        var instr = ui.rally.addInstruction(instr);
+        ui.rally.addNextInstruction().then(function (row) {
+            ui.selectInstruction(row);
+        });
     });
 
     $('#edit-instruction').on('click', function (e) {
