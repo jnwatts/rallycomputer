@@ -75,6 +75,15 @@ Rally.prototype = {
         });
     },
 
+    addNextInstruction: function() {
+        var last = this.sortedKeys().reverse()[0];
+        var instr = 1;
+        if (typeof last != 'undefined') {
+            instr = Number.parseFloat(last) + 1;
+        }
+        return this.addInstruction(instr);
+    },
+
     setValue: function (instr, col_index, val) {
         var rally = this;
         var col = RallyInstruction.prototype.columnDefs[col_index];
