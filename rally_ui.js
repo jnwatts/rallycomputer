@@ -35,7 +35,7 @@ RallyUI.prototype = {
 
     editState: false,
 
-    selectedInstruction: null,
+    selected: null,
 
     columnState: [],
 
@@ -164,7 +164,7 @@ RallyUI.prototype = {
             if (!calculated) {
                 td.addClass('notcalc');
             }
-            if (ui.editState && ui.selectedInstruction == instr.instr && col.is_db) {
+            if (ui.editState && ui.isSelected(instr.instr) && col.is_db) {
                 var input = $('<input />');
                 input.attr('type', 'text');
                 input.attr('size', 5);
@@ -219,12 +219,9 @@ RallyUI.prototype = {
             if (!ui.columnState[index])
                 td.hide();
         });
-        if (ui.selectedInstruction == instr.instr) {
-            tr.addClass('active');
-        }
 
         tr.on('click', function (e) {
-            if (ui.selectedInstruction != instr.instr) {
+            if (!ui.isSelected(instr.instr)) {
                 ui.selectInstruction(instr.instr, {row: instr.instr, col: $(e.target).attr('data-col')});
             }
         });
@@ -241,6 +238,15 @@ RallyUI.prototype = {
             old_tr.remove();
         } else {
             tbody.append(tr);
+        }
+
+        if (ui.isSelected(instr.instr)) {
+            tr.addClass('active');
+            if (ui.editState) {
+                tr.children('td[data-col='+ui.selected.col+']').children('input').focus().select();
+            } else {
+                tr.focus();
+            }
         }
     },
 
@@ -322,9 +328,13 @@ RallyUI.prototype = {
         return $('tr[data-row=\''+instr+'\']').children('td[data-col=\''+column+'\']');
     },
 
+    isSelected: function(instr) {
+        return (this.selected != null && this.selected.row == instr);
+    },
+
     selectInstruction: function (instr, target) {
         $('tr.active').removeClass('active');
-        var old_instr = this.selectedInstruction;
+        var old_selected = this.selected;;
         instr = Number.parseFloat(instr);
         if (isNaN(instr)) {
             instr = null;
@@ -333,15 +343,19 @@ RallyUI.prototype = {
             target.row = Number.parseFloat(target.row);
             target.col = Number.parseInt(target.col);
         }
-        if (old_instr != null) {
-            var old_tr = $('tr[data-row=\''+old_instr+'\']');
+        if (old_selected != null) {
+            var old_tr = $('tr[data-row=\''+old_selected.row+'\']');
             old_tr.find('input').trigger('blur');
         }
         if (instr != null) {
-            this.selectedInstruction = instr;
+            if (target) {
+                this.selected = target;
+            } else {
+                this.selected = {row: instr, col: 0};
+            }
             this.renderInstruction(this.rally.instructions[instr]);
-            if (old_instr != null) {
-                this.renderInstruction(this.rally.instructions[old_instr]);
+            if (old_selected != null) {
+                this.renderInstruction(this.rally.instructions[old_selected.row]);
             }
             var tr = $('tr[data-row=\''+instr+'\']');
             if (this.editState && target) {
@@ -358,8 +372,8 @@ RallyUI.prototype = {
         if (typeof state != 'undefined') {
             this.editState = state;
         }
-        if (this.selectedInstruction != null) {
-            this.renderInstruction(this.rally.instructions[this.selectedInstruction]);
+        if (this.selected != null) {
+            this.renderInstruction(this.rally.instructions[this.selected.row]);
             if (this.editState && target) {
                 var tr = this.findRow(target.row);
                 var td = this.findCell(target.row, target.col);
