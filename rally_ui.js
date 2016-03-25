@@ -12,8 +12,8 @@ function RallyUI(rally) {
         ui.editMode(!ui.editState);
     });
 
-    $('#instructions').on('keydown', function (e) {
-        console.log('TODO: For keys relating to cells, determine current cell and invoke cell keydown; others handle directly');
+    $(document).on('keydown', function (e) {
+        ui.handleKeyDownGlobal(e);
     });
 
     var rally_speed = $('#edit-rally-speed');
@@ -188,7 +188,7 @@ RallyUI.prototype = {
                     input.val(col.calculated_value);
                 }
                 input.on('keydown', function (e) {
-                    ui.handleKeyDown(e, instr);
+                    ui.handleKeyDownInput(e, instr);
                 });
                 input.on('blur', function (e) {
                     var val = null;
@@ -237,6 +237,10 @@ RallyUI.prototype = {
             }
         });
 
+        tr.on('keydown', function (e) {
+            ui.handleKeyDownRow(e, instr);
+        });
+
         var old_tr = tbody.children('tr[data-row=\''+instr.instr+'\']');
         if (old_tr.length > 0) {
             tr.insertBefore(old_tr);
@@ -255,7 +259,7 @@ RallyUI.prototype = {
         }
     },
 
-    handleKeyDown(e, instr) {
+    handleKeyDownInput(e, instr) {
         var ui = this;
         var input = $(e.target);
         var index = Number.parseFloat(input.closest('td').attr('data-col'));
@@ -313,9 +317,76 @@ RallyUI.prototype = {
                     } else if (instr.prev) {
                         ui.selectInstruction(instr.prev.instr, {row: instr.prev.instr, col: index});
                     }
-                    ui.editMode(false);
                     ui.rally.deleteInstruction(instr.instr);
+                } else {
+                    handled = false;
                 }
+                break;
+            default:
+                handled = false;
+                break;
+        }
+        if (handled) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
+    },
+
+    handleKeyDownRow: function(e, instr) {
+        var ui = this;
+        var handled = true;
+        switch(e.keyCode) {
+            case 33: // page up
+                var i = instr;
+                var count = 5;
+                for (var count = 5; count > 0; count--) {
+                    if (i.prev) {
+                        i = i.prev;
+                    }
+                }
+                if (i != instr) {
+                    ui.selectInstruction(i.instr, {row: i.instr, col: index});
+                }
+                break;
+            case 34: // page down
+                var i = instr;
+                var count = 5;
+                for (var count = 5; count > 0; count--) {
+                    if (i.next) {
+                        i = i.next;
+                    }
+                }
+                if (i != instr) {
+                    ui.selectInstruction(i.instr, {row: i.instr, col: index});
+                }
+                break;
+            case 38: // up
+                if (instr.prev) {
+                    ui.selectInstruction(instr.prev.instr);
+                }
+                break;
+            case 40: // down
+                var next = instr.next;
+                if (instr.next) {
+                    ui.selectInstruction(instr.next.instr);
+                }
+                break;
+            default:
+                handled = false;
+                break;
+        }
+        if (handled) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
+    },
+
+    handleKeyDownGlobal(e, instr) {
+        var ui = this;
+        var handled = false;
+        switch(e.keyCode) {
+            case 113: // f2
+                ui.editMode(!ui.editState);
                 break;
             default:
                 handled = false;
