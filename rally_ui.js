@@ -19,6 +19,7 @@ function RallyUI(rally) {
     var rally_speed = $('#edit-rally-speed');
     rally_speed.on('blur', function (e) {
         rally.rallySpeed($(this).val());
+        ui.renderInstructions();
     });
     rally_speed.val(rally.rallySpeed());
 
