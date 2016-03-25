@@ -23,6 +23,13 @@ function RallyUI(rally) {
     });
     rally_speed.val(rally.rallySpeed());
 
+    var odom_factor = $('#edit-odom-factor');
+    odom_factor.on('blur', function (e) {
+        rally.odomFactor($(this).val());
+        ui.rally.calculate();
+    });
+    odom_factor.val(rally.odomFactor());
+
 }
 
 RallyUI.prototype = {
