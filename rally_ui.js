@@ -156,7 +156,7 @@ RallyUI.prototype = {
     renderInstruction: function(instr) {
         var tbody = $('#instructions').children('tbody');
         var ui = this;
-        var tr = $('<tr />').attr('data-row', instr.instr);
+        var tr = $('<tr />').attr('data-row', instr.instr).attr('tabindex', 0);
 
         instr.columns.forEach(function (col, index) {
             var td = $('<td />').attr('data-col', index);
@@ -222,6 +222,12 @@ RallyUI.prototype = {
         tr.on('click', function (e) {
             if (!ui.isSelected(instr.instr)) {
                 ui.selectInstruction(instr.instr, {row: instr.instr, col: $(e.target).attr('data-col')});
+            }
+        });
+
+        tr.on('focus', function (e) {
+            if (!ui.isSelected(instr.instr)) {
+                ui.selectInstruction(instr.instr);
             }
         });
 
