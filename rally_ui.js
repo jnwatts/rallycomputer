@@ -164,12 +164,26 @@ RallyUI.prototype = {
             if (!calculated) {
                 td.addClass('notcalc');
             }
+            var pretty_val = col.toString();
+            if (col.name == 'delay') {
+                if (pretty_val == 0) {
+                    pretty_val = '';
+                }
+            } else if (typeof pretty_val == 'number') {
+                if (col.name == 'instr') {
+                    pretty_val = pretty_val.toFixed(1);
+                } else if (col.name == 'd_time') {
+                    pretty_val = moment('0:0', 'm:s').add(pretty_val, 'seconds').format('m:ss');
+                } else if (col.name != 'cas') {
+                    pretty_val = pretty_val.toFixed(3);
+                }
+            }
             if (ui.editState && ui.isSelected(instr.instr) && col.is_db) {
                 var input = $('<input />');
                 input.attr('type', 'text');
                 input.attr('size', 5);
                 if (calculated) {
-                    input.attr('placeholder', col.display_value);
+                    input.attr('placeholder', pretty_val);
                 } else {
                     input.val(col.calculated_value);
                 }
@@ -188,29 +202,14 @@ RallyUI.prototype = {
                 td.append(input);
                 td.addClass('edit');
             } else {
-                var val = col.toString();
-                if (col.name == 'delay') {
-                    if (val == 0) {
-                        val = '';
-                    }
-                } else if (typeof val == 'number') {
-                    if (col.name == 'instr') {
-                        val = val.toFixed(1);
-                    } else if (col.name == 'd_time') {
-                        val = moment('0:0', 'm:s').add(val, 'seconds').format('m:ss');
-                    } else if (col.name != 'cas') {
-                        val = val.toFixed(3);
-                    }
-
-                }
-                td.html(val);
+                td.html(pretty_val);
             }
             if (col.name == 'd_mlg') {
-                if (val <= 0.15 && val > 0) {
+                if (pretty_val <= 0.15 && pretty_val > 0) {
                     td.addClass('danger');
                 }
             } else if (col.name == 'cas') {
-                if (val > 0 && val != rally.rallySpeed()) {
+                if (pretty_val > 0 && pretty_val != rally.rallySpeed()) {
                     td.addClass('warning');
                 }
             }
