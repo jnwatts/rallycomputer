@@ -309,9 +309,7 @@ RallyInstruction.prototype = {
             new CalcPrev(d_time, 0, function () { return (raw_d_mlg.calculated_value * 3600) / prev.cas.calculated_value + delay.calculated_value; }),
             new CalcPrev(time, 0, function () { return prev.time.calculated_value + d_time.calculated_value; }),
             new CalcPrev(tod, 0, function () {
-                var t = moment(prev.tod.calculated_value, ["h-m-s", "h-m", "H-m A"]);
-                t.add(d_time.calculated_value, 'seconds');
-                return t.format('HH:mm:ss');
+                return prev.tod.calculated_value + (d_time.calculated_value * 1000);
             }),
             new CalcPrev(raw_mlg, 0, function () {
                 if (mlg.isSet() && raw_mlg.value == null) {
@@ -409,7 +407,7 @@ RallyInstruction.prototype.parseInt = function(v) {
 RallyInstruction.prototype.parseTime = function(v) {
     var result = moment(v, ["h-m-s", "h-m", "H-m A"]);
     if (result.isValid()) {
-        return result.format('HH:mm:ss');
+        return result.valueOf();
     } else {
         return null;
     }
