@@ -16,19 +16,8 @@ function RallyUI(rally) {
         ui.handleKeyDownGlobal(e);
     });
 
-    var rally_speed = $('#edit-rally-speed');
-    rally_speed.on('blur', function (e) {
-        rally.rallySpeed($(this).val());
-        ui.renderInstructions();
-    });
-    rally_speed.val(rally.rallySpeed());
-
-    var odom_factor = $('#edit-odom-factor');
-    odom_factor.on('blur', function (e) {
-        rally.odomFactor($(this).val());
-        ui.rally.calculate();
-    });
-    odom_factor.val(rally.odomFactor());
+    this.editBox('#edit-rally-speed', rally.rallySpeed);
+    this.editBox('#edit-odom-factor', rally.odomFactor);
 
 }
 
@@ -473,5 +462,16 @@ RallyUI.prototype = {
         } else {
             editButton.removeClass('active');
         }
+    },
+
+    editBox: function(input, prop) {
+        var ui = this;
+        input = $(input);
+        prop = prop.bind(ui.rally);
+        input.on('blur', function (e) {
+            prop(input.val());
+            ui.renderInstructions();
+        });
+        input.val(prop());
     },
 };
