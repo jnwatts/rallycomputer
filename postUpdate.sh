@@ -3,6 +3,7 @@ rm -Rf public
 mkdir public
 mkdir public/js
 mkdir public/css
+mkdir public/css/images
 mkdir public/fonts
 
 cp -a bower_components/bootstrap/dist/* public/
@@ -18,6 +19,10 @@ cp -a bower_components/jquery.floatThead/dist/* public/js/
 cp -a bower_components/jQuery-contextMenu/dist/* public/js/
 
 cp -a bower_components/moment/min/*min* public/js/
+
+cp -a bower_components/jquery-ui/jquery-ui.min.js public/js/
+cp -a bower_components/jquery-ui/themes/smoothness/jquery-ui.min.css public/css/
+cp -a bower_components/jquery-ui/themes/smoothness/images/* public/css/images/
 
 ln -snf ../index.html public/index.html
 
