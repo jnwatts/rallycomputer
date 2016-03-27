@@ -167,6 +167,19 @@ Rally.prototype = {
         return Number.parseInt(val);
     },
 
+    timeSeconds: function(val) {
+        if (arguments.length > 0) {
+            this.setConfig('time_seconds', Boolean(val));
+        }
+        val = this.getConfig('time_seconds');
+        if (val == null) {
+            val = true;
+        } else {
+            val = (val.toLowerCase() == "true");
+        }
+        return Boolean(val);
+    },
+
     adjustMilleage: function(val) {
         return Number.parseFloat(val) * this.odomFactor();
     },

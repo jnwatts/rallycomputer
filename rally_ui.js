@@ -27,6 +27,10 @@ function RallyUI(rally) {
         .on('blur', function(e) {
             ui.setTimerInterval(100);
         });
+    this.editCheckbox('#edit-time-seconds', rally.timeSeconds)
+        .on('change', function() {
+            ui.renderInstructions();
+        });
 
 }
 
@@ -485,6 +489,18 @@ RallyUI.prototype = {
             ui.renderInstructions();
         });
         input.val(prop());
+        return input;
+    },
+
+    editCheckbox: function(input, prop) {
+        var ui = this;
+        input = $(input);
+        prop = prop.bind(ui.rally);
+        input.on('change', function (e) {
+            prop(input.is(':checked'));
+            ui.renderInstructions();
+        });
+        input.prop('checked', prop());
         return input;
     },
 
