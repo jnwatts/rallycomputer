@@ -479,6 +479,7 @@ RallyUI.prototype = {
             ui.renderInstructions();
         });
         input.val(prop());
+        return input;
     },
 
     createTimer: function() {
