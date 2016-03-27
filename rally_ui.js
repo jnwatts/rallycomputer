@@ -82,7 +82,7 @@ RallyUI.prototype = {
         thead.append(tr);
 
         $.contextMenu({
-            selector: 'thead th', 
+            selector: 'thead th',
             items: {
                 hide: {
                     name: 'Hide',
@@ -99,7 +99,7 @@ RallyUI.prototype = {
             return Number.parseFloat(element.attr('data-row'));
         }
         $.contextMenu({
-            selector: 'tr td', 
+            selector: 'tr td',
             items: {
                 insert_before: {
                     name: 'Insert before',
