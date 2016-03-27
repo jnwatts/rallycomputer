@@ -155,9 +155,8 @@ RallyUI.prototype = {
         var tbody = $('#instructions').children('tbody');
         tbody.children().remove();
         var ui = this;
-        var instructions = ui.rally.instructions;
-        this.rally.sortedKeys().forEach(function (i) {
-            ui.renderInstruction(instructions[i]);
+        ui.rally.instructions.forEach(function (instr) {
+            ui.renderInstruction(instr);
         });
         $('#instructions').trigger( "resize" );
     },
@@ -205,7 +204,7 @@ RallyUI.prototype = {
                         val = input.val();
                     }
                     if (val != col.value) {
-                        ui.rally.setValue(instr.instr, col.index, val);
+                        ui.rally.setValue(instr.id, col.index, val);
                     }
                 });
                 td.append(input);
@@ -326,7 +325,7 @@ RallyUI.prototype = {
                     } else if (instr.prev) {
                         ui.selectInstruction(instr.prev.instr, {row: instr.prev.instr, col: index});
                     }
-                    ui.rally.deleteInstruction(instr.instr);
+                    ui.rally.deleteInstruction(instr.id);
                 } else {
                     handled = false;
                 }
@@ -440,9 +439,9 @@ RallyUI.prototype = {
             } else {
                 this.selected = {row: instr, col: 0};
             }
-            this.renderInstruction(this.rally.instructions[instr]);
+            this.renderInstruction(this.rally.instruction(instr));
             if (old_selected != null) {
-                this.renderInstruction(this.rally.instructions[old_selected.row]);
+                this.renderInstruction(this.rally.instruction(old_selected.row));
             }
             var tr = $('tr[data-row=\''+instr+'\']');
             if (this.editState && target) {
@@ -460,7 +459,7 @@ RallyUI.prototype = {
             this.editState = state;
         }
         if (this.selected != null) {
-            this.renderInstruction(this.rally.instructions[this.selected.row]);
+            this.renderInstruction(this.rally.instruction(this.selected.row));
             if (this.editState && target) {
                 var tr = this.findRow(target.row);
                 var td = this.findCell(target.row, target.col);

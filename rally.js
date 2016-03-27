@@ -5,17 +5,16 @@ function Rally() {
 }
 
 Rally.prototype = {
-    db_columns: [ 'instr', 'raw_mlg', 'cas', 'delay', 'mlg', 'time'],
     instructions: [ ],
+    instruction_map: new Map(),
 
     init: function() {
         var db = this.db = new Dexie('MyDatabase');
 
         // Define a schema
-        db.version(1)
-            .stores({
-                instructions: Rally.prototype.db_columns.join()
-            });
+        db.version(1).stores({
+            instructions: [ 'id++', '&instr', 'raw_mlg', 'cas', 'delay', 'mlg', 'time'].join()
+        });
 
         // Open the database
         db.open()
@@ -35,19 +34,31 @@ Rally.prototype = {
     calculate: function() {
         var rally = this;
         var prev = null;
-        rally.instructions = [];
-        return this.db.instructions.each(function (row) {
-            var instr = new RallyInstruction(row);
-            instr.calculate(rally, prev);
-            rally.instructions[instr.instr] = instr;
-            instr.prev = prev;
-            if (prev) {
-                prev.next = instr;
-            }
-            prev = instr;
-        }).then(function (e) {
+        return this.db.instructions.toArray(function (instructions) {
+            rally.instructions = instructions.sort(function (a,b) {
+                return a.instr - b.instr;
+            }).map(function (row) {
+                var instr = new RallyInstruction(row);
+                instr.calculate(rally, prev);
+                rally.instruction_map.set(parseFloat(instr.instr), instr);
+                instr.prev = prev;
+                if (prev) {
+                    prev.next = instr;
+                }
+                prev = instr;
+                return instr;
+            });
             rally.ui.renderInstructions();
         });
+    },
+
+    instruction: function (instr) {
+        instr = parseFloat(instr);
+        if (this.instruction_map.has(instr)) {
+            return this.instruction_map.get(instr);
+        } else {
+            return null;
+        }
     },
 
     addInstruction: function() {
@@ -76,38 +87,39 @@ Rally.prototype = {
         }
 
         var rally = this;
-        return this.db.instructions.put(row).then(function (row) {
+        return this.db.instructions.put(row).then(function () {
             return rally.calculate().then(function() {
-                return row;
+                return row.instr;
             });
         });
     },
 
     addNextInstruction: function() {
-        var last = this.sortedKeys().reverse()[0];
+        var keys = Object.keys(this.instructions);
         var instr = 1;
-        if (typeof last != 'undefined') {
+        if (keys.length > 0) {
+            var last = keys[keys.length - 1];
             instr = Number.parseFloat(last) + 1;
         }
         return this.addInstruction(instr);
     },
 
-    setValue: function (instr, col_index, val) {
+    setValue: function (id, col_index, val) {
         var rally = this;
         var col = RallyInstruction.prototype.columnDefs[col_index];
         var obj = {};
         obj[col.name] = val;
-        this.db.instructions.update(instr, obj).then(function () { rally.calculate(); });
+
+        this.db.instructions.update(id, obj).then(function () { rally.calculate(); }).catch(function (err) {
+            console.log(instr);
+            console.log(obj);
+            debugger
+        });
     },
 
-    sortedKeys: function() {
-        return Object.keys(this.instructions).map(function(v) { return Number.parseFloat(v); }).sort(function (a,b) {return a-b});
-    },
-
-    deleteInstruction: function(instr) {
-        //delete this.instructions[instr.instr];
+    deleteInstruction: function(id) {
         var rally = this;
-        this.db.instructions.where('instr').equals(instr).delete().then(function () {rally.calculate();});
+        this.db.instructions.where('id').equals(id).delete().then(function () {rally.calculate();});
     },
 
     odomFactor: function(val) {
