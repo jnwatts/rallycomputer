@@ -193,7 +193,7 @@ RallyUI.prototype = {
                 if (calculated) {
                     input.attr('placeholder', pretty_val);
                 } else {
-                    input.val(col.calculated_value);
+                    input.val(pretty_val);
                 }
                 input.on('keydown', function (e) {
                     ui.handleKeyDownInput(e, instr);
