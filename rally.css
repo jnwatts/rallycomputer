@@ -44,3 +44,9 @@ th {
   user-select: none;           /* non-prefixed version, currently
                                   not supported by any browser */
 }
+
+div#timer {
+    font-family: monospace;
+    font-size: 150%;
+    width: 175px;
+}

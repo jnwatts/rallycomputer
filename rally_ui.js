@@ -2,6 +2,9 @@ function RallyUI(rally) {
     this.rally = rally;
     var ui = this;
 
+    ui.createTimer();
+    setInterval(ui.updateTimer.bind(ui), 100);
+
     $('#add-instruction').on('click', function (e) {
         ui.rally.addNextInstruction().then(function (row) {
             ui.selectInstruction(row);
@@ -18,6 +21,7 @@ function RallyUI(rally) {
 
     this.editBox('#edit-rally-speed', rally.rallySpeed);
     this.editBox('#edit-odom-factor', rally.odomFactor);
+    this.editBox('#edit-clock-adj', rally.clockAdj);
 
 }
 
@@ -34,6 +38,8 @@ RallyUI.prototype = {
     selected: null,
 
     columnState: [],
+
+    timerBody: null,
 
     showColumn(index, show) {
         if (show) {
@@ -473,5 +479,53 @@ RallyUI.prototype = {
             ui.renderInstructions();
         });
         input.val(prop());
+    },
+
+    createTimer: function() {
+        var ui = this;
+        var container = $('body');
+        var timerPanel = $('<div class="panel panel-default ui-widget-content" id="timer" />');
+        this.timerBody = $('<div class="panel-body" />');
+        timerPanel.css('position', 'absolute');
+        timerPanel.append(this.timerBody);
+        container.append(timerPanel);
+        timerPanel.css(ui.timerPosition());
+        timerPanel.draggable({
+            containment: container,
+            scroll: false,
+            stop: function(e, jquery_ui) {
+                ui.timerPosition(jquery_ui.position);
+            },
+        });
+    },
+
+    updateTimer: function() {
+        if (this.timerBody) {
+            var old_val = this.timerBody.text();
+            var time = moment(this.rally.now());
+            var val = time.format('HH:mm:ss.S');
+            if (old_val != val) {
+                this.timerBody.text(val);
+            }
+        }
+    },
+
+    timerPosition: function(val) {
+        if (arguments.length > 0) {
+            this.rally.setConfig('timer_position', JSON.stringify(val));
+        }
+        try {
+            val = JSON.parse(this.rally.getConfig('timer_position'));
+        } catch(e) {
+            if (e.name == "SyntaxError") {
+                val = null;
+            } else {
+                throw e;
+            }
+        }
+        if (val == null) {
+            val = {top: 0, left: 0};
+        }
+        return val;
     },
 };
