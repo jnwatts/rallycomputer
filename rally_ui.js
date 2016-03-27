@@ -3,7 +3,6 @@ function RallyUI(rally) {
     var ui = this;
 
     ui.createTimer();
-    setInterval(ui.updateTimer.bind(ui), 100);
 
     $('#add-instruction').on('click', function (e) {
         ui.rally.addNextInstruction().then(function (row) {
@@ -21,7 +20,13 @@ function RallyUI(rally) {
 
     this.editBox('#edit-rally-speed', rally.rallySpeed);
     this.editBox('#edit-odom-factor', rally.odomFactor);
-    this.editBox('#edit-clock-adj', rally.clockAdj);
+    this.editBox('#edit-clock-adj', rally.clockAdj)
+        .on('focus', function(e) {
+            ui.setTimerInterval(10);
+        })
+        .on('blur', function(e) {
+            ui.setTimerInterval(100);
+        });
 
 }
 
@@ -40,6 +45,8 @@ RallyUI.prototype = {
     columnState: [],
 
     timerBody: null,
+
+    timerInterval: null,
 
     showColumn(index, show) {
         if (show) {
@@ -498,6 +505,14 @@ RallyUI.prototype = {
                 ui.timerPosition(jquery_ui.position);
             },
         });
+        this.setTimerInterval(100);
+    },
+
+    setTimerInterval: function(interval) {
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+        }
+        this.timerInterval = setInterval(this.updateTimer.bind(this), interval);
     },
 
     updateTimer: function() {
