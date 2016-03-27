@@ -210,17 +210,6 @@ RallyInstruction.prototype = {
         return Math.round(val * 1000) / 1000;
     },
 
-    formatTime: function(seconds) {
-        var d = new Date();
-        d.setTime(Date.now());
-        d.setHours(0);
-        d.setMinutes(0);
-        d.setSeconds(0);
-        d.setMilliseconds(0);
-        d.setTime(d.getTime() + seconds * 1000.0);
-        return d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds();
-    },
-
     formatDeltaTime: function(seconds) {
         var minutes = ~~(seconds / 60);
         return minutes + ':' + Math.round(seconds * 100) / 100;
