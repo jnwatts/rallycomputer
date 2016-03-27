@@ -22,6 +22,14 @@ Rally.prototype = {
             .catch(function(error){ alert('Uh oh : ' + error); });
 
         this.calculate();
+
+        this.cachedClockAdj = this.clockAdj();
+    },
+
+    cachedClockAdj: 0,
+
+    now: function() {
+        return Date.now() + this.cachedClockAdj;
     },
 
     calculate: function() {
@@ -131,6 +139,18 @@ Rally.prototype = {
         val = this.getConfig('rally_speed');
         if (val == null) {
             val = 1;
+        }
+        return Number.parseInt(val);
+    },
+
+    clockAdj: function(val) {
+        if (arguments.length > 0) {
+            this.setConfig('clock_adj', val);
+            this.cachedClockAdj = this.clockAdj();
+        }
+        val = this.getConfig('clock_adj');
+        if (val == null) {
+            val = 0;
         }
         return Number.parseInt(val);
     },
