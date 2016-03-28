@@ -129,18 +129,14 @@ RallyUI.prototype = {
                 insert_before: {
                     name: 'Insert before',
                     callback: function (key, opt) {
-                        var tr = this.closest('tr');
-                        var instr = instrFromRow(tr);
-                        ui.rally.addInstruction(instr - 0.5);
+                        ui.insertInstruction(-0.5);
                         return true;
                     },
                 },
                 insert_after: {
                     name: 'Insert after',
                     callback: function (key, opt) {
-                        var tr = this.closest('tr');
-                        var instr = instrFromRow(tr);
-                        ui.rally.addInstruction(instr + 0.5);
+                        ui.insertInstruction(0.5);
                         return true;
                     },
                 },
@@ -602,5 +598,15 @@ RallyUI.prototype = {
 
     timerResetLaps: function() {
         this.laps.children().remove();
+    },
+
+    insertInstruction: function(relative) {
+        var ui = this;
+        if (ui.selected) {
+            var instr = ui.rally.instruction(ui.selected.row);
+            ui.rally.addInstruction(instr.instr + relative).then(function (instr) {
+                ui.selectInstruction(instr);
+            });
+        }
     },
 };
