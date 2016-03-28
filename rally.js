@@ -200,6 +200,48 @@ Rally.prototype = {
         this.db.delete();
         this.init();
     },
+
+    parseInstruction: function(v) {
+        if (v == null || v == NaN) {
+            throw new Error("Invalid format for instruction");
+        }
+        if (this.instruction_map.has(v)) {
+            throw new Error("Instruction numbers must be unique");
+        }
+        return v;
+    },
+
+    parseTime: function(v) {
+        var result = null;
+        if (v != null) {
+            if (!v.match(/^\s*[0-9:.]+(\s*[pamPAM]+)?\s*$/)) {
+                throw new Error("Invalid time format");
+            }
+            if (this.timeSeconds()) {
+                result = moment(v, ["h-m-s", "h-m", "H-m A"]);
+            } else {
+                if (typeof v == 'string' && v.includes('.')) {
+                    var m = null;
+                    m = v.match(/^\s*(([0-9]+):)?([0-9]+)\.([0-9]+)(\s*[pamPAM]+)?\s*$/);
+                    if (m) {
+                        result = moment({h: m[2], m: m[3]});
+                        result.add(Number.parseFloat('0.'+m[4]) * 60, 'seconds');
+                    } else {
+                        throw new Error("Invalid time format");
+                    }
+                } else {
+                    result = moment(v, ["h-m-s", "h-m", "H-m A"]);
+                }
+            }
+            if (result.isValid()) {
+                result = result.valueOf();
+            } else {
+                result = null;
+            }
+        }
+        return result;
+    },
+
 };
 
 
