@@ -417,7 +417,7 @@ RallyInstruction.prototype.parseInt = function(v) {
 }
 
 RallyInstruction.prototype.columnDefs = [
-    new RallyInstruction.prototype.Column(0,   'instr',        'Instr',            true,    RallyInstruction.prototype.parseFloat),
+    new RallyInstruction.prototype.Column(0,   'instr',        'Instr',            true,    RallyInstruction.prototype.parseFixedFloat(1)),
     new RallyInstruction.prototype.Column(1,   'raw_mlg',      'Raw Mlg',          true,    RallyInstruction.prototype.parseFloat),
     new RallyInstruction.prototype.Column(2,   'raw_d_mlg',    'Raw &Delta;Mlg',   false,   RallyInstruction.prototype.parseFloat),
     new RallyInstruction.prototype.Column(3,   'mlg',          'Mlg',              true,    RallyInstruction.prototype.parseFloat),
