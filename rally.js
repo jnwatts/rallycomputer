@@ -421,7 +421,7 @@ RallyInstruction.prototype.columnDefs = [
     new RallyInstruction.prototype.Column(4,   'd_mlg',        '&Delta;Mlg',       false,   RallyInstruction.prototype.parseFloat),
     new RallyInstruction.prototype.Column(5,   'cas',          'CAS',              true,    RallyInstruction.prototype.parseInt),
     new RallyInstruction.prototype.Column(6,   'delay',        'Delay',            true,    RallyInstruction.prototype.parseFloat),
-    new RallyInstruction.prototype.Column(7,   'tod',          'TOD',              true,    RallyInstruction.prototype.parseTime),
-    new RallyInstruction.prototype.Column(8,   'time',         'Time',             false,   RallyInstruction.prototype.parseFloat),
+    new RallyInstruction.prototype.Column(7,   'tod',          'TOD',              true,    RallyInstruction.prototype.parseInt),
+    new RallyInstruction.prototype.Column(8,   'time',         'Time',             false,   RallyInstruction.prototype.parseInt),
     new RallyInstruction.prototype.Column(9,   'd_time',       '&Delta;Time',      false,   RallyInstruction.prototype.parseFloat),
 ];
