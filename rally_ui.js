@@ -58,6 +58,8 @@ RallyUI.prototype = {
 
     timerInterval: null,
 
+    laps: null,
+
     showColumn(index, show) {
         if (show) {
             $('th[data-col=\''+index+'\']').show();
@@ -528,12 +530,12 @@ RallyUI.prototype = {
         });
         this.setTimerInterval(100);
 
-        var laps = $('#timer-laps');
+        this.laps = $('#timer-laps');
         $('#timer-lap').on('click', function() {
-            laps.append($('<li />').text(ui.formatTimer(ui.rally.now())));
+            ui.timerLap();
         });
         $('#timer-clear').on('click', function() {
-            laps.html();
+            ui.timerResetLaps();
         });
     },
 
@@ -589,5 +591,13 @@ RallyUI.prototype = {
             this.formatAbsTime = function(val) { return tenths(val, 'HH:mm'); };
             this.formatRelTime = function(val) { return (val > 0 ? tenths(val * 1000, 'm') : '0:00'); };
         }
+    },
+
+    timerLap: function() {
+        this.laps.append($('<li />').text(this.formatTimer(this.rally.now())));
+    },
+
+    timerResetLaps: function() {
+        this.laps.children().remove();
     },
 };
