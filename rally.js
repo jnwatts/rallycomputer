@@ -388,6 +388,18 @@ RallyInstruction.prototype.Column.prototype = {
     },
 };
 
+RallyInstruction.prototype.parseFixedFloat = function(f) {
+    return function(v) {
+        var result = Number.parseFloat(v);
+        if (isNaN(result)) {
+            result = null;
+        } else {
+            result = result.toFixed(f);
+        }
+        return result;
+    };
+}
+
 RallyInstruction.prototype.parseFloat = function(v) {
     var result = Number.parseFloat(v);
     if (isNaN(result)) {
