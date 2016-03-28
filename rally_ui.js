@@ -60,6 +60,8 @@ RallyUI.prototype = {
 
     laps: null,
 
+    modalActive: false,
+
     showColumn(index, show) {
         if (show) {
             $('th[data-col=\''+index+'\']').show();
@@ -222,6 +224,7 @@ RallyUI.prototype = {
                         try {
                             ui.rally.setValue(instr.id, col.index, val);
                         } catch (e) {
+                            ui.alertDanger('Exception', e.message);
                             input.val(input.attr('defaultValue'));
                         }
                     }
@@ -291,6 +294,9 @@ RallyUI.prototype = {
         var input = $(e.target);
         var index = Number.parseFloat(input.closest('td').attr('data-col'));
         var handled = true;
+        if (ui.modalActive) {
+            return;
+        }
         switch(e.keyCode) {
             case 33: // page up
                 var i = instr;
@@ -364,6 +370,9 @@ RallyUI.prototype = {
     handleKeyDownRow: function(e, instr) {
         var ui = this;
         var handled = true;
+        if (ui.modalActive) {
+            return;
+        }
         switch(e.keyCode) {
             case 33: // page up
                 var i = instr;
@@ -413,13 +422,20 @@ RallyUI.prototype = {
     handleKeyDownGlobal(e, instr) {
         var ui = this;
         var handled = false;
-        switch(e.keyCode) {
-            case 113: // f2
-                ui.editMode(!ui.editState);
-                break;
-            default:
-                handled = false;
-                break;
+        if (ui.modalActive) {
+            return;
+        }
+        try {
+            switch(e.keyCode) {
+                case 113: // f2
+                    ui.editMode(!ui.editState);
+                    break;
+                default:
+                    handled = false;
+                    break;
+            }
+        } catch (e) {
+            ui.alertException(e);
         }
         if (handled) {
             e.stopPropagation();
@@ -609,6 +625,26 @@ RallyUI.prototype = {
 
     timerResetLaps: function() {
         this.laps.children().remove();
+    },
+
+    alertDanger: function(title, message) {
+        var ui = this;
+        var dialog = $('#alert');
+        var header = dialog.find('.modal-header');
+        header.addClass('alert-danger');
+        dialog.find('.modal-title').text(title);
+        dialog.find('.modal-body').text(message);
+        dialog.on('hidden.bs.modal', function(e) {
+            header.removeClass('alert-danger');
+            dialog.unbind('hidden.bs.modal');
+            ui.modalActive = false;
+        });
+        ui.modalActive = true;
+        dialog.modal();
+    },
+
+    alertException: function(e) {
+        this.alertDanger('Exception', e.message);
     },
 
     insertInstruction: function(relative) {
