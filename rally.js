@@ -7,6 +7,8 @@ function Rally() {
 Rally.prototype = {
     instructions: [ ],
     instruction_map: new Map(),
+    instruction_id_map: new Map(),
+    last_instr: null,
 
     init: function() {
         var db = this.db = new Dexie('MyDatabase');
@@ -20,6 +22,7 @@ Rally.prototype = {
         db.open()
             .catch(function(error){ alert('Uh oh : ' + error); });
 
+        this.last_instr = 0;
         this.calculate();
 
         this.cachedClockAdj = this.clockAdj();
@@ -35,6 +38,7 @@ Rally.prototype = {
         var rally = this;
         var prev = null;
         this.instruction_map.clear();
+        this.instruction_id_map.clear();
         return this.db.instructions.toArray(function (rows) {
             rally.instructions = rows.sort(function (a,b) {
                 return a.instr - b.instr;
@@ -42,6 +46,8 @@ Rally.prototype = {
                 var instr = new RallyInstruction(row);
                 instr.calculate(rally, prev);
                 rally.instruction_map.set(parseFloat(instr.instr), instr);
+                rally.instruction_id_map.set(instr.id, instr);
+                rally.last_instr = instr.instr;
                 instr.prev = prev;
                 if (prev) {
                     prev.next = instr;
@@ -100,13 +106,8 @@ Rally.prototype = {
     },
 
     addNextInstruction: function() {
-        var keys = Object.keys(this.instructions);
-        var instr = 1;
-        if (keys.length > 0) {
-            var last = keys[keys.length - 1];
-            instr = Number.parseFloat(last) + 1;
-        }
-        return this.addInstruction(instr);
+        this.last_instr = Math.floor(this.last_instr + 1);
+        return this.addInstruction(this.last_instr);
     },
 
     setValue: function (id, col_index, val) {
@@ -131,6 +132,14 @@ Rally.prototype = {
 
     deleteInstruction: function(id) {
         var rally = this;
+        var instr = this.instruction_id_map.get(id);
+        if (instr && this.last_instr == instr.instr) {
+            if (instr.prev) {
+                this.last_instr = instr.prev.instr;
+            } else {
+                this.last_instr = 0;
+            }
+        }
         this.db.instructions.where('id').equals(id).delete().then(function () {rally.calculate();});
     },
 
