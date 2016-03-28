@@ -12,6 +12,10 @@ function RallyUI(rally) {
         ui.editMode(!ui.editState);
     });
 
+    $('#reset-instructions').on('click', function (e) {
+        ui.rally.reset();
+    });
+
     $(document).on('keydown', function (e) {
         ui.handleKeyDownGlobal(e);
     });
