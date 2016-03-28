@@ -292,6 +292,7 @@ RallyUI.prototype = {
                     }
                 }
                 if (i != instr) {
+                    input.trigger('blur');
                     ui.selectInstruction(i.instr, {row: i.instr, col: index});
                 }
                 break;
@@ -304,19 +305,20 @@ RallyUI.prototype = {
                     }
                 }
                 if (i != instr) {
+                    input.trigger('blur');
                     ui.selectInstruction(i.instr, {row: i.instr, col: index});
                 }
                 break;
             case 38: // up
                 if (instr.prev) {
+                    input.trigger('blur');
                     ui.selectInstruction(instr.prev.instr, {row: instr.prev.instr, col: index});
                 }
                 break;
             case 13: // enter
-                input.trigger('blur');
             case 40: // down
                 var next = instr.next;
-                if (!next) {
+                input.trigger('blur');
                 if (next) {
                     ui.selectInstruction(instr.next.instr, {row: instr.next.instr, col: index});
                 } else {
