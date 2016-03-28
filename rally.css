@@ -45,6 +45,12 @@ th {
                                   not supported by any browser */
 }
 
+#timer-panel .move-grip {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
 #timer-value {
     font-family: monospace;
     font-size: 150%;
