@@ -204,7 +204,7 @@ Rally.prototype = {
     adjustMilleage: function(val) {
         return Number.parseFloat(val) * this.odomFactor();
     },
-    
+
     adjustCAS: function(val) {
         return Number.parseFloat(val) * this.casFactor();
     },
