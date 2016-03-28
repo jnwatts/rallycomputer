@@ -522,6 +522,7 @@ RallyUI.prototype = {
         timerPanel.css('position', 'fixed');
         timerPanel.css(ui.timerPosition());
         timerPanel.draggable({
+            handle: '.move-grip',
             containment: container,
             scroll: false,
             stop: function(e, jquery_ui) {
