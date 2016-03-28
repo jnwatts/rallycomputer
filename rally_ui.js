@@ -2,8 +2,6 @@ function RallyUI(rally) {
     this.rally = rally;
     var ui = this;
 
-    ui.createTimer();
-
     $('#add-instruction').on('click', function (e) {
         ui.rally.addNextInstruction().then(function (row) {
             ui.selectInstruction(row);
@@ -32,6 +30,8 @@ function RallyUI(rally) {
             ui.renderInstructions();
         });
 
+
+    ui.createTimer();
 }
 
 RallyUI.prototype = {
