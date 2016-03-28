@@ -108,6 +108,13 @@ Rally.prototype = {
         var rally = this;
         var col = RallyInstruction.prototype.columnDefs[col_index];
         var obj = {};
+        if (col.name == 'instr') {
+            val = rally.parseInstruction(col.format_cb(val));
+        } else if (col.name == 'tod') {
+            val = rally.parseTime(val);
+        } else {
+            val = col.format_cb(val);
+        }
         obj[col.name] = val;
 
         this.db.instructions.update(id, obj).then(function () { rally.calculate(); }).catch(function (err) {
