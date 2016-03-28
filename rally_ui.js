@@ -538,6 +538,8 @@ RallyUI.prototype = {
         $('#timer-clear').on('click', function() {
             ui.timerResetLaps();
         });
+
+        timerPanel.addClass('in');
     },
 
     setTimerInterval: function(interval) {
