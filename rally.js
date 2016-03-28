@@ -66,6 +66,10 @@ Rally.prototype = {
 
         row.instr = Number.parseFloat(arguments[0]);
 
+        if (this.instruction_map.has(row.instr)) {
+            throw new Error("Instruction numbers must be unique");
+        }
+
         row.raw_mlg = null;
         row.cas = null;
         row.delay = null;
