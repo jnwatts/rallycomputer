@@ -321,12 +321,12 @@ RallyUI.prototype = {
             case 40: // down
                 var next = instr.next;
                 if (!next) {
+                if (next) {
+                    ui.selectInstruction(instr.next.instr, {row: instr.next.instr, col: index});
+                } else {
                     ui.rally.addNextInstruction().then(function (row) {
                         ui.selectInstruction(row, {row: row, col: index});
                     });
-                }
-                if (instr.next) {
-                    ui.selectInstruction(instr.next.instr, {row: instr.next.instr, col: index});
                 }
                 break;
             case 27: // escape
