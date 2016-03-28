@@ -34,8 +34,8 @@ Rally.prototype = {
     calculate: function() {
         var rally = this;
         var prev = null;
-        return this.db.instructions.toArray(function (instructions) {
-            rally.instructions = instructions.sort(function (a,b) {
+        return this.db.instructions.toArray(function (rows) {
+            rally.instructions = rows.sort(function (a,b) {
                 return a.instr - b.instr;
             }).map(function (row) {
                 var instr = new RallyInstruction(row);
