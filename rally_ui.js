@@ -511,11 +511,9 @@ RallyUI.prototype = {
     createTimer: function() {
         var ui = this;
         var container = $('body');
-        var timerPanel = $('<div class="panel panel-default ui-widget-content" id="timer" />');
-        this.timerBody = $('<div class="panel-body" />');
+        var timerPanel = $('#timer-panel');
+        this.timerBody = $('#timer-value');
         timerPanel.css('position', 'absolute');
-        timerPanel.append(this.timerBody);
-        container.append(timerPanel);
         timerPanel.css(ui.timerPosition());
         timerPanel.draggable({
             containment: container,

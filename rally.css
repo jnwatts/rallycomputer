@@ -45,7 +45,7 @@ th {
                                   not supported by any browser */
 }
 
-div#timer {
+#timer-value {
     font-family: monospace;
     font-size: 150%;
     width: 175px;
