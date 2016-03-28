@@ -404,15 +404,6 @@ RallyInstruction.prototype.parseInt = function(v) {
     return result;
 }
 
-RallyInstruction.prototype.parseTime = function(v) {
-    var result = moment(v, ["h-m-s", "h-m", "H-m A"]);
-    if (result.isValid()) {
-        return result.valueOf();
-    } else {
-        return null;
-    }
-}
-
 RallyInstruction.prototype.columnDefs = [
     new RallyInstruction.prototype.Column(0,   'instr',        'Instr',            true,    RallyInstruction.prototype.parseFloat),
     new RallyInstruction.prototype.Column(1,   'raw_mlg',      'Raw Mlg',          true,    RallyInstruction.prototype.parseFloat),
