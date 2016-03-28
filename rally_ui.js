@@ -523,6 +523,14 @@ RallyUI.prototype = {
             },
         });
         this.setTimerInterval(100);
+
+        var laps = $('#timer-laps');
+        $('#timer-lap').on('click', function() {
+            laps.append($('<li />').text(ui.formatTimer(ui.rally.now())));
+        });
+        $('#timer-clear').on('click', function() {
+            laps.html();
+        });
     },
 
     setTimerInterval: function(interval) {
