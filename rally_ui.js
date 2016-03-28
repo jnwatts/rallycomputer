@@ -27,9 +27,11 @@ function RallyUI(rally) {
         });
     this.editCheckbox('#edit-time-seconds', rally.timeSeconds)
         .on('change', function() {
+            ui.updateTimeFormats();
             ui.renderInstructions();
         });
 
+    ui.updateTimeFormats();
 
     ui.createTimer();
 }
@@ -184,8 +186,10 @@ RallyUI.prototype = {
             } else if (typeof pretty_val == 'number') {
                 if (col.name == 'instr') {
                     pretty_val = pretty_val.toFixed(1);
+                } else if (col.name == 'tod') {
+                    pretty_val = ui.formatAbsTime(pretty_val);
                 } else if (col.name == 'd_time') {
-                    pretty_val = moment('0:0', 'm:s').add(pretty_val, 'seconds').format('m:ss');
+                    pretty_val = ui.formatRelTime(pretty_val);
                 } else if (col.name != 'cas') {
                     pretty_val = pretty_val.toFixed(3);
                 }
@@ -533,8 +537,7 @@ RallyUI.prototype = {
     updateTimer: function() {
         if (this.timerBody) {
             var old_val = this.timerBody.text();
-            var time = moment(this.rally.now());
-            var val = time.format('HH:mm:ss.S');
+            var val = this.formatTimer(this.rally.now());
             if (old_val != val) {
                 this.timerBody.text(val);
             }
@@ -558,5 +561,23 @@ RallyUI.prototype = {
             val = {top: 0, left: 0};
         }
         return val;
+    },
+
+    updateTimeFormats: function() {
+        if (this.rally.timeSeconds()) {
+            this.formatTimer = function(val) { return moment(val).format('HH:mm:ss.S'); };
+            this.formatAbsTime = function(val) { return moment(val).format('HH:mm:ss'); };
+            this.formatRelTime = function(val) { return (val > 0 ? moment(val * 1000).format('m:ss') : '0:00'); };
+        } else {
+            var tenths = function(val, fmt) {
+                var t = moment(val);
+                var minutes = parseFloat(moment.duration({seconds: t.second(), milliseconds: t.milliseconds()}).asMinutes());
+                var new_val = t.format(fmt) + String(minutes.toFixed(3)).substr(1);
+                return new_val;
+            }
+            this.formatTimer = function(val) { return tenths(val, 'HH:mm'); };
+            this.formatAbsTime = function(val) { return tenths(val, 'HH:mm'); };
+            this.formatRelTime = function(val) { return (val > 0 ? tenths(val * 1000, 'm') : '0:00'); };
+        }
     },
 };
