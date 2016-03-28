@@ -205,8 +205,10 @@ RallyUI.prototype = {
                 input.attr('size', 5);
                 if (calculated) {
                     input.attr('placeholder', pretty_val);
+                    input.attr('defaultValue', '');
                 } else {
                     input.val(pretty_val);
+                    input.attr('defaultValue', pretty_val);
                 }
                 input.on('keydown', function (e) {
                     ui.handleKeyDownInput(e, instr);
@@ -217,7 +219,11 @@ RallyUI.prototype = {
                         val = input.val();
                     }
                     if (val != col.value) {
-                        ui.rally.setValue(instr.id, col.index, val);
+                        try {
+                            ui.rally.setValue(instr.id, col.index, val);
+                        } catch (e) {
+                            input.val(input.attr('defaultValue'));
+                        }
                     }
                 });
                 td.append(input);
