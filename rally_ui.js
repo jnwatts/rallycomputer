@@ -430,6 +430,20 @@ RallyUI.prototype = {
                 case 113: // f2
                     ui.editMode(!ui.editState);
                     break;
+                case 76: // L
+                    ui.timerLap();
+                    break;
+                case 67: // C
+                    if (e.shiftKey) {
+                        ui.timerResetLaps();
+                    }
+                    break;
+                case 109: // KP_MINUS
+                    ui.insertInstruction(e.shiftKey ? -1 : -0.5);
+                    break;
+                case 107: // KP_PLUS
+                    ui.insertInstruction(e.shiftKey ? 1 : 0.5);
+                    break;
                 default:
                     handled = false;
                     break;
