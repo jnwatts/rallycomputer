@@ -50,3 +50,15 @@ th {
     font-size: 150%;
     width: 175px;
 }
+
+#timer-laps {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    font-family: monospace;
+}
+
+#timer-laps li {
+    margin-top: 1em;
+}
