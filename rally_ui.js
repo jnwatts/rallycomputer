@@ -519,7 +519,7 @@ RallyUI.prototype = {
         var container = $('body');
         var timerPanel = $('#timer-panel');
         this.timerBody = $('#timer-value');
-        timerPanel.css('position', 'absolute');
+        timerPanel.css('position', 'fixed');
         timerPanel.css(ui.timerPosition());
         timerPanel.draggable({
             containment: container,
