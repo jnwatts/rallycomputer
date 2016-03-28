@@ -170,6 +170,9 @@ RallyUI.prototype = {
     },
 
     renderInstruction: function(instr) {
+        if (instr == null) {
+            return;
+        }
         var tbody = $('#instructions').children('tbody');
         var ui = this;
         var tr = $('<tr />').attr('data-row', instr.instr).attr('tabindex', 0);
