@@ -148,7 +148,7 @@ RallyUI.prototype = {
                     callback: function (key, opt) {
                         var tr = this.closest('tr');
                         var instr = instrFromRow(tr);
-                        ui.rally.deleteInstruction(instr);
+                        ui.rally.deleteInstruction(ui.rally.instruction(instr).id);
                         return true;
                     },
                 },
