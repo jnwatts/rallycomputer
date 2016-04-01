@@ -42,7 +42,7 @@ function RallyUI(rally) {
 
 RallyUI.prototype = {
     checkVal: function(val) {
-        if (typeof val == 'undefined' || val == null) {
+        if (typeof val == 'undefined' || val === null) {
             return 'ERR';
         }
         return val;
@@ -62,7 +62,7 @@ RallyUI.prototype = {
 
     modalActive: false,
 
-    showColumn(index, show) {
+    showColumn: function(index, show) {
         if (show) {
             $('th[data-col=\''+index+'\']').show();
             $('td[data-col=\''+index+'\']').show();
@@ -124,7 +124,8 @@ RallyUI.prototype = {
 
         var instrFromRow = function(element) {
             return Number.parseFloat(element.attr('data-row'));
-        }
+        };
+
         $.contextMenu({
             selector: 'tr td',
             items: {
@@ -172,7 +173,7 @@ RallyUI.prototype = {
     },
 
     renderInstruction: function(instr) {
-        if (instr == null) {
+        if (instr === null) {
             return;
         }
         var tbody = $('#instructions').children('tbody');
@@ -187,7 +188,7 @@ RallyUI.prototype = {
             }
             var pretty_val = col.toString();
             if (col.name == 'delay') {
-                if (pretty_val == 0) {
+                if (pretty_val === 0) {
                     pretty_val = '';
                 }
             } else if (typeof pretty_val == 'number') {
@@ -223,8 +224,8 @@ RallyUI.prototype = {
                     if (val != col.value) {
                         try {
                             ui.rally.setValue(instr.id, col.index, val);
-                        } catch (e) {
-                            ui.alertDanger('Exception', e.message);
+                        } catch (err) {
+                            ui.alertDanger('Exception', err.message);
                             input.val(input.attr('defaultValue'));
                         }
                     }
@@ -289,7 +290,9 @@ RallyUI.prototype = {
         }
     },
 
-    handleKeyDownInput(e, instr) {
+    handleKeyDownInput: function(e, instr) {
+        var i;
+        var count;
         var ui = this;
         var input = $(e.target);
         var index = Number.parseFloat(input.closest('td').attr('data-col'));
@@ -299,9 +302,8 @@ RallyUI.prototype = {
         }
         switch(e.keyCode) {
             case 33: // page up
-                var i = instr;
-                var count = 5;
-                for (var count = 5; count > 0; count--) {
+                i = instr;
+                for (count = 5; count > 0; count--) {
                     if (i.prev) {
                         i = i.prev;
                     }
@@ -312,9 +314,8 @@ RallyUI.prototype = {
                 }
                 break;
             case 34: // page down
-                var i = instr;
-                var count = 5;
-                for (var count = 5; count > 0; count--) {
+                i = instr;
+                for (count = 5; count > 0; count--) {
                     if (i.next) {
                         i = i.next;
                     }
@@ -368,6 +369,8 @@ RallyUI.prototype = {
     },
 
     handleKeyDownRow: function(e, instr) {
+        var i;
+        var count;
         var ui = this;
         var handled = true;
         if (ui.modalActive) {
@@ -375,9 +378,8 @@ RallyUI.prototype = {
         }
         switch(e.keyCode) {
             case 33: // page up
-                var i = instr;
-                var count = 5;
-                for (var count = 5; count > 0; count--) {
+                i = instr;
+                for (count = 5; count > 0; count--) {
                     if (i.prev) {
                         i = i.prev;
                     }
@@ -387,9 +389,8 @@ RallyUI.prototype = {
                 }
                 break;
             case 34: // page down
-                var i = instr;
-                var count = 5;
-                for (var count = 5; count > 0; count--) {
+                i = instr;
+                for (count = 5; count > 0; count--) {
                     if (i.next) {
                         i = i.next;
                     }
@@ -419,7 +420,7 @@ RallyUI.prototype = {
         }
     },
 
-    handleKeyDownGlobal(e, instr) {
+    handleKeyDownGlobal: function(e, instr) {
         var ui = this;
         var handled = false;
         if (ui.modalActive) {
@@ -448,8 +449,8 @@ RallyUI.prototype = {
                     handled = false;
                     break;
             }
-        } catch (e) {
-            ui.alertException(e);
+        } catch (err) {
+            ui.alertException(err);
         }
         if (handled) {
             e.stopPropagation();
@@ -466,12 +467,12 @@ RallyUI.prototype = {
     },
 
     isSelected: function(instr) {
-        return (this.selected != null && this.selected.row == instr);
+        return (this.selected !== null && this.selected.row == instr);
     },
 
     selectInstruction: function (instr, target) {
         $('tr.active').removeClass('active');
-        var old_selected = this.selected;;
+        var old_selected = this.selected;
         instr = Number.parseFloat(instr);
         if (isNaN(instr)) {
             instr = null;
@@ -480,18 +481,18 @@ RallyUI.prototype = {
             target.row = Number.parseFloat(target.row);
             target.col = Number.parseInt(target.col);
         }
-        if (old_selected != null) {
+        if (old_selected !== null) {
             var old_tr = $('tr[data-row=\''+old_selected.row+'\']');
             old_tr.find('input').trigger('blur');
         }
-        if (instr != null) {
+        if (instr !== null) {
             if (target) {
                 this.selected = target;
             } else {
                 this.selected = {row: instr, col: 0};
             }
             this.renderInstruction(this.rally.instruction(instr));
-            if (old_selected != null) {
+            if (old_selected !== null) {
                 this.renderInstruction(this.rally.instruction(old_selected.row));
             }
             var tr = $('tr[data-row=\''+instr+'\']');
@@ -509,7 +510,7 @@ RallyUI.prototype = {
         if (typeof state != 'undefined') {
             this.editState = state;
         }
-        if (this.selected != null) {
+        if (this.selected !== null) {
             this.renderInstruction(this.rally.instruction(this.selected.row));
             if (this.editState && target) {
                 var tr = this.findRow(target.row);
@@ -609,7 +610,7 @@ RallyUI.prototype = {
                 throw e;
             }
         }
-        if (val == null) {
+        if (val === null) {
             val = {top: 0, left: 0};
         }
         return val;
@@ -626,7 +627,7 @@ RallyUI.prototype = {
                 var minutes = parseFloat(moment.duration({seconds: t.second(), milliseconds: t.milliseconds()}).asMinutes());
                 var new_val = t.format(fmt) + String(minutes.toFixed(3)).substr(1);
                 return new_val;
-            }
+            };
             this.formatTimer = function(val) { return tenths(val, 'HH:mm'); };
             this.formatAbsTime = function(val) { return tenths(val, 'HH:mm'); };
             this.formatRelTime = function(val) { return (val > 0 ? tenths(val * 1000, 'm') : '0:00'); };

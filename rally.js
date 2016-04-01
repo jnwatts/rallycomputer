@@ -69,7 +69,7 @@ Rally.prototype = {
     },
 
     addInstruction: function() {
-        var row = new Object();
+        var row = {};
 
         row.instr = Number.parseFloat(arguments[0]);
 
@@ -86,12 +86,16 @@ Rally.prototype = {
         switch (arguments.length) {
             case 6:
                 row.time = Number.parseInt(arguments[5]);
+                /* falls through */
             case 5:
                 row.mlg = Number.parseFloat(arguments[4]);
+                /* falls through */
             case 4:
                 row.delay = Number.parseFloat(arguments[3]);
+                /* falls through */
             case 3:
                 row.cas = Number.parseInt(arguments[2]);
+                /* falls through */
             case 2:
                 row.raw_mlg = Number.parseFloat(arguments[1]);
                 break;
@@ -126,7 +130,6 @@ Rally.prototype = {
         this.db.instructions.update(id, obj).then(function () { rally.calculate(); }).catch(function (err) {
             console.log(instr);
             console.log(obj);
-            debugger
         });
     },
 
@@ -148,7 +151,7 @@ Rally.prototype = {
             this.setConfig('odom_factor', val);
         }
         val = this.getConfig('odom_factor');
-        if (val == null) {
+        if (val === null) {
             val = 1;
         }
         return Number.parseFloat(val);
@@ -159,7 +162,7 @@ Rally.prototype = {
             this.setConfig('cas_factor', val);
         }
         val = this.getConfig('cas_factor');
-        if (val == null) {
+        if (val === null) {
             val = 1;
         }
         return Number.parseFloat(val);
@@ -170,7 +173,7 @@ Rally.prototype = {
             this.setConfig('rally_speed', val);
         }
         val = this.getConfig('rally_speed');
-        if (val == null) {
+        if (val === null) {
             val = 1;
         }
         return Number.parseInt(val);
@@ -182,7 +185,7 @@ Rally.prototype = {
             this.cachedClockAdj = this.clockAdj();
         }
         val = this.getConfig('clock_adj');
-        if (val == null) {
+        if (val === null) {
             val = 0;
         }
         return Number.parseInt(val);
@@ -193,7 +196,7 @@ Rally.prototype = {
             this.setConfig('time_seconds', Boolean(val));
         }
         val = this.getConfig('time_seconds');
-        if (val == null) {
+        if (val === null) {
             val = true;
         } else {
             val = (val.toLowerCase() == "true");
@@ -223,7 +226,7 @@ Rally.prototype = {
     },
 
     parseInstruction: function(v) {
-        if (v == null || v == NaN) {
+        if (v === null || isNaN(v)) {
             throw new Error("Invalid format for instruction");
         }
         if (this.instruction_map.has(v)) {
@@ -234,7 +237,7 @@ Rally.prototype = {
 
     parseTime: function(v) {
         var result = null;
-        if (v != null) {
+        if (v !== null) {
             if (!v.match(/^\s*[0-9:.]+(\s*[pamPAM]+)?\s*$/)) {
                 throw new Error("Invalid time format");
             }
@@ -316,7 +319,7 @@ RallyInstruction.prototype = {
         var d_time = this.col('d_time');
 
         if (prev) {
-            p = new Object();
+            p = {};
             p.instr = prev.col('instr');
             p.raw_mlg = prev.col('raw_mlg');
             p.raw_d_mlg = prev.col('raw_d_mlg');
@@ -341,7 +344,7 @@ RallyInstruction.prototype = {
                 if (col.isSet()) {
                     col.calculated_value = col.value;
                 } else if (prev && calc_cb) {
-                    col.calculated_value = calc_cb()
+                    col.calculated_value = calc_cb();
                 } else {
                     col.calculated_value = default_value;
                 }
@@ -361,7 +364,7 @@ RallyInstruction.prototype = {
             }),
             new CalcCur(d_mlg, function() { return rally.adjustMilleage(raw_d_mlg.calculated_value); }),
             new CalcPrev(mlg, 0, function () {
-                if (raw_mlg.calculated_value == 0) {
+                if (raw_mlg.calculated_value === 0) {
                     return 0;
                 } else {
                     return prev.mlg.calculated_value + d_mlg.calculated_value;
@@ -375,7 +378,7 @@ RallyInstruction.prototype = {
                 return prev.tod.calculated_value + (d_time.calculated_value * 1000);
             }),
             new CalcPrev(raw_mlg, 0, function () {
-                if (mlg.isSet() && raw_mlg.value == null) {
+                if (mlg.isSet() && raw_mlg.value === null) {
                     return prev.raw_mlg.calculated_value + (mlg.calculated_value - prev.mlg.calculated_value);
                 } else {
                     return 0;
@@ -436,14 +439,14 @@ RallyInstruction.prototype.Column.prototype = {
         if (!this.instance) {
             throw "Instance not set";
         }
-        return this.value == null;
+        return this.value === null;
     },
 
     isSet: function() {
         if (!this.instance) {
             throw "Instance not set";
         }
-        return this.is_db && this.value != null;
+        return this.is_db && this.value !== null;
     },
 
     toString: function() {
@@ -461,7 +464,7 @@ RallyInstruction.prototype.parseFixedFloat = function(f) {
         }
         return result;
     };
-}
+};
 
 RallyInstruction.prototype.parseFloat = function(v) {
     var result = Number.parseFloat(v);
@@ -469,7 +472,7 @@ RallyInstruction.prototype.parseFloat = function(v) {
         result = null;
     }
     return result;
-}
+};
 
 RallyInstruction.prototype.parseInt = function(v) {
     var result = Number.parseInt(v);
@@ -477,7 +480,7 @@ RallyInstruction.prototype.parseInt = function(v) {
         result = null;
     }
     return result;
-}
+};
 
 RallyInstruction.prototype.columnDefs = [
     new RallyInstruction.prototype.Column(0,   'instr',        'Instr',            true,    RallyInstruction.prototype.parseFixedFloat(1)),
