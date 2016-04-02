@@ -1,4 +1,7 @@
-function RallyUI(rally) {
+(function () {
+  'use strict';
+
+window.RallyUI = function(rally) {
     this.rally = rally;
     var ui = this;
 
@@ -38,7 +41,7 @@ function RallyUI(rally) {
     ui.updateTimeFormats();
 
     ui.createTimer();
-}
+};
 
 RallyUI.prototype = {
     checkVal: function(val) {
@@ -240,7 +243,7 @@ RallyUI.prototype = {
                     td.addClass('danger');
                 }
             } else if (col.name == 'cas') {
-                if (pretty_val > 0 && pretty_val != rally.rallySpeed()) {
+                if (pretty_val > 0 && pretty_val != ui.rally.rallySpeed()) {
                     td.addClass('warning');
                 }
             }
@@ -672,3 +675,5 @@ RallyUI.prototype = {
         }
     },
 };
+
+}());

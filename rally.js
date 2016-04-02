@@ -1,8 +1,11 @@
-function Rally() {
+(function () {
+  'use strict';
+
+window.Rally = function() {
     this.init();
 
     this.ui = new RallyUI(this);
-}
+};
 
 Rally.prototype = {
     instructions: [ ],
@@ -269,7 +272,7 @@ Rally.prototype = {
 };
 
 
-function RallyInstruction(row) {
+window.RallyInstruction = function(row) {
     Object.assign(this, row, {
         columns: [],
         prev: null,
@@ -278,7 +281,7 @@ function RallyInstruction(row) {
 
     var rally = this;
     this.columns = this.columnDefs.map(function (d) { return d.cloneWith(rally); });
-}
+};
 
 RallyInstruction.prototype = {
     columnDefs: [],
@@ -319,7 +322,7 @@ RallyInstruction.prototype = {
         var d_time = this.col('d_time');
 
         if (prev) {
-            p = {};
+            var p = {};
             p.instr = prev.col('instr');
             p.raw_mlg = prev.col('raw_mlg');
             p.raw_d_mlg = prev.col('raw_d_mlg');
@@ -357,7 +360,7 @@ RallyInstruction.prototype = {
             };
         };
 
-        calcFunctions = [
+        var calcFunctions = [
             new CalcPrev(raw_d_mlg, 0, function () {
                 var result = raw_mlg.calculated_value - prev.raw_mlg.calculated_value;
                 return (result < 0 ? 0 : result);
@@ -494,3 +497,5 @@ RallyInstruction.prototype.columnDefs = [
     new RallyInstruction.prototype.Column(8,   'time',         'Time',             false,   RallyInstruction.prototype.parseInt),
     new RallyInstruction.prototype.Column(9,   'd_time',       '&Delta;Time',      false,   RallyInstruction.prototype.parseFloat),
 ];
+
+}());

@@ -104,18 +104,21 @@
 <script src="js/rally_ui.js"></script>
 <script src="js/rally.js"></script>
 <script type="text/javascript">
-var rally = new Rally();
+(function () {
+  'use strict';
+  var rally = new Rally();
 
-Dexie.Promise.on('error', function(err) {
-    console.log(err.stack || err);
-});
+  Dexie.Promise.on('error', function(err) {
+      console.log(err.stack || err);
+  });
 
-rally.ui.renderInstructionsHeader();
-rally.ui.editMode(false);
+  rally.ui.renderInstructionsHeader();
+  rally.ui.editMode(false);
 
-rally.ui.showColumn(1, false);
-rally.ui.showColumn(2, false);
-rally.ui.showColumn(8, false);
+  rally.ui.showColumn(1, false);
+  rally.ui.showColumn(2, false);
+  rally.ui.showColumn(8, false);
+}());
 </script>
 </body>
 </html>
