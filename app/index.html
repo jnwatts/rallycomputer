@@ -1,14 +1,27 @@
-<!DOCTYPE html>
-<html manifest="rally.mf">
-<head>
-<link rel="stylesheet" type="text/css" href="js/jquery.contextMenu.min.css">
-<link rel="stylesheet" type="text/css" href="css/jquery-ui.min.css">
-<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
-<link rel="stylesheet" type="text/css" href="css/bootstrap-theme.min.css">
-<link rel="stylesheet" type="text/css" href="css/normalize.css">
-<link rel="stylesheet" type="text/css" href="css/rally.css">
-</head>
-<body>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RallyComputer</title>
+
+    <!-- build:css styles/vendor.css -->
+    <!-- bower:css -->
+    <link rel="stylesheet" href="/bower_components/jquery-ui/themes/smoothness/jquery-ui.css" />
+    <link rel="stylesheet" href="/bower_components/jQuery-contextMenu/dist/jquery.contextMenu.css" />
+    <link rel="stylesheet" href="/bower_components/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="/bower_components/bootstrap/dist/css/bootstrap-theme.css" />
+    <link rel="stylesheet" href="/bower_components/normalize-css/normalize.css" />
+    <!-- endbower -->
+    <!-- endbuild -->
+
+    <!-- build:css styles/main.css -->
+    <link rel="stylesheet" href="styles/rally.css">
+    <!-- endbuild -->
+
+  </head>
+  <body>
 <div class="container">
 <table class="table table-condensed" id="instructions">
 <thead>
@@ -93,16 +106,39 @@
     </div>
 </div>
 
-<script src="js/moment.min.js"></script>
-<script src="js/jquery.min.js"></script>
-<script src="js/jquery.floatThead.min.js"></script>
-<script src="js/jquery.contextMenu.min.js"></script>
-<script src="js/jquery.ui.position.min.js"></script>
-<script src="js/jquery-ui.min.js"></script>
-<script src="js/bootstrap.min.js"></script>
-<script src="js/dexie.min.js"></script>
-<script src="js/rally_ui.js"></script>
-<script src="js/rally.js"></script>
+<!-- build:js scripts/vendor.js -->
+<!-- bower:js -->
+<script src="/bower_components/moment/moment.js"></script>
+<script src="/bower_components/jquery/dist/jquery.js"></script>
+<script src="/bower_components/jquery-ui/jquery-ui.js"></script>
+<script src="/bower_components/bootstrap/dist/js/bootstrap.js"></script>
+<script src="/bower_components/dexie/dist/dexie.js"></script>js
+<!-- endbower -->
+<!-- endbuild -->
+
+<!-- build:js scripts/plugins.js -->
+<script src="/bower_components/jquery.floatThead/dist/jquery.floatThead.js"></script>
+<script src="/bower_components/jQuery-contextMenu/dist/jquery.contextMenu.js"></script>
+<script src="/bower_components/jQuery-contextMenu/dist/jquery.ui.position.js"></script>
+<script src="/bower_components/bootstrap/js/affix.js"></script>
+<script src="/bower_components/bootstrap/js/alert.js"></script>
+<script src="/bower_components/bootstrap/js/dropdown.js"></script>
+<script src="/bower_components/bootstrap/js/tooltip.js"></script>
+<script src="/bower_components/bootstrap/js/modal.js"></script>
+<script src="/bower_components/bootstrap/js/transition.js"></script>
+<script src="/bower_components/bootstrap/js/button.js"></script>
+<script src="/bower_components/bootstrap/js/popover.js"></script>
+<script src="/bower_components/bootstrap/js/carousel.js"></script>
+<script src="/bower_components/bootstrap/js/scrollspy.js"></script>
+<script src="/bower_components/bootstrap/js/collapse.js"></script>
+<script src="/bower_components/bootstrap/js/tab.js"></script>
+<!-- endbuild -->
+
+<!-- build:js scripts/main.js -->
+<script src="scripts/rally_ui.js"></script>
+<script src="scripts/rally.js"></script>
+<!-- endbuild -->
+
 <script type="text/javascript">
 (function () {
   'use strict';
