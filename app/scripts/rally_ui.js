@@ -1,5 +1,5 @@
 (function () {
-  'use strict';
+'use strict';
 
 window.RallyUI = function(rally) {
     this.rally = rally;
