@@ -574,9 +574,20 @@ RallyUI.prototype = {
             handle: '.move-grip',
             containment: container,
             scroll: false,
+            delay: 100,
             stop: function(e, jquery_ui) {
                 ui.timerPosition(jquery_ui.position);
             },
+        });
+        var timer = null;
+        timerPanel.on('mousedown', function() {
+            timer = setTimeout(function() {
+                timerPanel.addClass('ui-draggable-dragging');
+            }, 100);
+        });
+        timerPanel.on('mouseup', function() {
+            timerPanel.removeClass('ui-draggable-dragging');
+            clearTimeout(timer);
         });
         this.setTimerInterval(100);
 

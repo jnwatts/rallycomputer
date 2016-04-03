@@ -13,7 +13,8 @@
     "jquery.floatThead": "^1.4.0",
     "jQuery-contextMenu": "^2.1.1",
     "moment": "^2.12.0",
-    "jquery-ui": "^1.11.4"
+    "jquery-ui": "^1.11.4",
+    "jqueryui-touch-punch": "*"
   },
   "overrides": {
     "bootstrap": {
@@ -23,6 +24,9 @@
         "dist/js/bootstrap.js",
         "dist/fonts/*"
       ]
+    },
+    "jqueryui-touch-punch": {
+      "main": "jquery.ui.touch-punch.js"
     }
   },
   "devDependencies": {
