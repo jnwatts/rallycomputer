@@ -45,6 +45,10 @@ th {
                                   not supported by any browser */
 }
 
+#timer-panel {
+    width: 170px;
+}
+
 #timer-panel .move-grip {
     position: absolute;
     left: 0;
