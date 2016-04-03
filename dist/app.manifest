@@ -1,0 +1,21 @@
+CACHE MANIFEST
+
+CACHE:
+index.html
+robots.txt
+fonts/glyphicons-halflings-regular.eot
+fonts/glyphicons-halflings-regular.svg
+fonts/glyphicons-halflings-regular.ttf
+fonts/glyphicons-halflings-regular.woff
+fonts/glyphicons-halflings-regular.woff2
+scripts/main.js
+scripts/plugins.js
+scripts/vendor.js
+styles/main.css
+styles/vendor.css
+
+NETWORK:
+*
+
+SETTINGS:
+prefer-online
