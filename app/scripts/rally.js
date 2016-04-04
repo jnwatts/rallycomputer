@@ -320,6 +320,7 @@ RallyInstruction.prototype = {
         var tod = this.col('tod');
         var time = this.col('time');
         var d_time = this.col('d_time');
+        var err_time = this.col('err_time');
 
         if (prev) {
             var p = {};
@@ -333,6 +334,7 @@ RallyInstruction.prototype = {
             p.tod = prev.col('tod');
             p.time = prev.col('time');
             p.d_time = prev.col('d_time');
+            p.err_time = prev.col('err_time');
             prev = p;
         }
 
@@ -378,7 +380,7 @@ RallyInstruction.prototype = {
             new CalcPrev(d_time, 0, function () { return (raw_d_mlg.calculated_value * 3600) / prev.cas.calculated_value + delay.calculated_value; }),
             new CalcPrev(time, 0, function () { return prev.time.calculated_value + d_time.calculated_value; }),
             new CalcPrev(tod, 0, function () {
-                return prev.tod.calculated_value + (d_time.calculated_value * 1000);
+                return prev.tod.calculated_value + (d_time.calculated_value + prev.err_time.calculated_value) * 1000;
             }),
             new CalcPrev(raw_mlg, 0, function () {
                 if (mlg.isSet() && raw_mlg.value === null) {
@@ -386,6 +388,14 @@ RallyInstruction.prototype = {
                 } else {
                     return 0;
                 }
+            }),
+            new CalcPrev(err_time, 0, function() {
+                var v = 0;
+                if (tod.isSet()) {
+                    v = prev.tod.calculated_value + (d_time.calculated_value + prev.err_time.calculated_value) * 1000 - tod.value;
+                    v /= 1000;
+                }
+                return v;
             }),
         ];
 
@@ -496,6 +506,7 @@ RallyInstruction.prototype.columnDefs = [
     new RallyInstruction.prototype.Column(7,   'tod',          'TOD',              true,    RallyInstruction.prototype.parseInt),
     new RallyInstruction.prototype.Column(8,   'time',         'Time',             false,   RallyInstruction.prototype.parseInt),
     new RallyInstruction.prototype.Column(9,   'd_time',       '&Delta;Time',      false,   RallyInstruction.prototype.parseFloat),
+    new RallyInstruction.prototype.Column(10,  'err_time',     'Err Time',         false,   RallyInstruction.prototype.parseFloat),
 ];
 
 }());
