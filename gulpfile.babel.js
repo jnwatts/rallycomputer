@@ -156,6 +156,7 @@ gulp.task('build', ['lint', 'html', 'images', 'fonts', 'extras'], () => {
       filename: 'app.manifest',
       exclude: 'app.manifest',
       preferOnline: true,
+      hash: true,
     }))
     .pipe(gulp.dest('dist'));
 });
