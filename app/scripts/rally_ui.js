@@ -75,6 +75,8 @@ RallyUI.prototype = {
 
     modalActive: false,
 
+    menu_hidden_columns: {},
+
     showColumn: function(name, show) {
         var ui = this;
         var setVisible = function(name, show) {
@@ -86,8 +88,12 @@ RallyUI.prototype = {
                 $('td[data-col=\''+name+'\']').hide();
             }
             $('label[data-col=\''+name+'\'] input').prop('checked', show);
+            ui.menu_hidden_columns[name].visible = !show;
         };
         if (name) {
+            if (name == 'instr') {
+                return;
+            }
             setVisible(name, show);
             ui.columnState[name] = show;
             ui.rally.setConfig('column_state', JSON.stringify(this.columnState));
@@ -128,6 +134,7 @@ RallyUI.prototype = {
         var tr = $('<tr />');
         RallyInstruction.prototype.column_defs_display_order.forEach(function (col) {
             var th = $('<th />').attr('data-col', col.name);
+            th.addClass('instruction-column');
             th.html(col.label);
 
             th.on('dblclick', function (e) {
@@ -143,21 +150,39 @@ RallyUI.prototype = {
             hideshow.append($('<label />').attr('data-col', col.name).append(input).append(col.label));
 
             ui.columnState[col.name] = true;
+
+            ui.menu_hidden_columns[col.name] = {
+                name: col.label,
+            };
         });
 
         thead.append(tr);
 
         $.contextMenu({
-            selector: 'thead th',
-            items: {
-                hide: {
-                    name: 'Hide',
-                    callback: function (key, opt) {
-                        var name = this.attr('data-col');
-                        ui.showColumn(name, false);
-                        return true;
+            selector: '.instruction-column',
+            callback: function (key, opt) {
+                console.log(key);
+                console.log(opt);
+                var name = key;
+                ui.showColumn(name, true);
+                return true;
+            },
+            build: function () {
+                var items = {
+                    hide: {
+                        name: 'Hide',
+                        callback: function (key, opt) {
+                            var name = this.attr('data-col');
+                            ui.showColumn(name, false);
+                            return true;
+                        },
                     },
-                },
+                    show: {
+                        name: 'Show',
+                        items: ui.menu_hidden_columns,
+                    },
+                };
+                return {items: items};
             },
         });
 
