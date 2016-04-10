@@ -46,17 +46,17 @@ Rally.prototype = {
             rally.instructions = rows.sort(function (a,b) {
                 return a.instr - b.instr;
             }).map(function (row) {
-                var instr = new RallyInstruction(row);
-                instr.calculate(rally, prev);
-                rally.instruction_map.set(parseFloat(instr.instr), instr);
-                rally.instruction_id_map.set(instr.id, instr);
-                rally.last_instr = instr.instr;
-                instr.prev = prev;
+                var instruction = new RallyInstruction(row);
+                instruction.calculate(rally, prev);
+                rally.instruction_map.set(parseFloat(instruction.instr), instruction);
+                rally.instruction_id_map.set(instruction.id, instruction);
+                rally.last_instr = instruction.instr.value;
+                instruction.prev = prev;
                 if (prev) {
-                    prev.next = instr;
+                    prev.next = instruction;
                 }
-                prev = instr;
-                return instr;
+                prev = instruction;
+                return instruction;
             });
             rally.ui.renderInstructions();
         });
@@ -117,9 +117,8 @@ Rally.prototype = {
         return this.addInstruction(this.last_instr);
     },
 
-    setValue: function (id, col_index, val) {
+    setValue: function (instruction, col, val) {
         var rally = this;
-        var col = RallyInstruction.prototype.columnDefs[col_index];
         var obj = {};
         if (col.name == 'instr') {
             val = rally.parseInstruction(col.format_cb(val));
@@ -130,23 +129,27 @@ Rally.prototype = {
         }
         obj[col.name] = val;
 
-        this.db.instructions.update(id, obj).then(function () { rally.calculate(); }).catch(function (err) {
+        this.db.instructions.update(instruction.id, obj).then(function () { rally.calculate(); }).catch(function (err) {
             console.log(instr);
             console.log(obj);
         });
     },
 
-    deleteInstruction: function(id) {
+    deleteInstruction: function(instruction) {
         var rally = this;
-        var instr = this.instruction_id_map.get(id);
-        if (instr && this.last_instr == instr.instr) {
-            if (instr.prev) {
-                this.last_instr = instr.prev.instr;
+        if (instruction && this.last_instr == instruction.instr.value) {
+            if (instruction.prev) {
+                this.last_instr = instruction.prev.instr.value;
             } else {
                 this.last_instr = 0;
             }
         }
-        this.db.instructions.where('id').equals(id).delete().then(function () {rally.calculate();});
+        rally.db.instructions.where('id')
+            .equals(instruction.id)
+            .delete()
+            .then(function () {
+                rally.calculate();
+            });
     },
 
     odomFactor: function(val) {
@@ -273,240 +276,242 @@ Rally.prototype = {
 
 
 window.RallyInstruction = function(row) {
-    Object.assign(this, row, {
-        columns: [],
-        prev: null,
-        next: null,
-    });
+    this.id = row.id;
+    this.columns = [];
+    this.columns_calc_order = [];
 
-    var rally = this;
-    this.columns = this.columnDefs.map(function (d) { return d.cloneWith(rally); });
+    var instruction = this;
+    this.column_defs_display_order.forEach(function (def) {
+        var val = null;
+        if (row.hasOwnProperty(def.name)) {
+            val = row[def.name];
+        }
+        var col = new RallyInstructionColumn(val, def);
+        instruction.columns.push(col);
+        Object.defineProperty(instruction, col.name, {
+            get: function() {
+                return col;
+            },
+        });
+    });
+    this.column_defs_calc_order.forEach(function (name) {
+        instruction.columns_calc_order.push(instruction[name]);
+    });
 };
 
 RallyInstruction.prototype = {
-    columnDefs: [],
+    column_defs_display_order: [],
+    column_defs_by_name: {},
+    column_defs_calc_order: [],
 
-    col: function(index) {
-        var result = null;
-        var int_index = -1;
-        if (typeof index == 'string') {
-            int_index = this.columns.findIndex(function (v) { return (v.name == index); });
-        } else {
-            int_index = index;
-        }
-        if (int_index < 0 || int_index >= this.columns.length) {
-            throw new Error('Invalid index: ' + index);
-        }
-        return this.columns[int_index];
-    },
-
-    formatMilleage: function(val, places) {
-        return Math.round(val * 1000) / 1000;
-    },
-
-    formatDeltaTime: function(seconds) {
-        var minutes = ~~(seconds / 60);
-        return minutes + ':' + Math.round(seconds * 100) / 100;
-    },
-
-    calculate: function(rally, prev) {
-        var instr = this.col('instr');
-        var raw_mlg = this.col('raw_mlg');
-        var raw_d_mlg = this.col('raw_d_mlg');
-        var mlg = this.col('mlg');
-        var d_mlg = this.col('d_mlg');
-        var cas = this.col('cas');
-        var delay = this.col('delay');
-        var tod = this.col('tod');
-        var time = this.col('time');
-        var d_time = this.col('d_time');
-        var err_time = this.col('err_time');
-
-        if (prev) {
-            var p = {};
-            p.instr = prev.col('instr');
-            p.raw_mlg = prev.col('raw_mlg');
-            p.raw_d_mlg = prev.col('raw_d_mlg');
-            p.mlg = prev.col('mlg');
-            p.d_mlg = prev.col('d_mlg');
-            p.cas = prev.col('cas');
-            p.delay = prev.col('delay');
-            p.tod = prev.col('tod');
-            p.time = prev.col('time');
-            p.d_time = prev.col('d_time');
-            p.err_time = prev.col('err_time');
-            prev = p;
-        }
-
-        this.columns.forEach(function (c) {
-            if (c.isSet()) {
-                c.calculated_value = c.value;
+    parseFixedFloat: function(f) {
+        return function(v) {
+            var result = Number.parseFloat(v);
+            if (isNaN(result)) {
+                result = null;
+            } else {
+                result = result.toFixed(f);
             }
-        });
-
-        var CalcPrev = function(col, default_value, calc_cb) {
-            this.calc = function() {
-                if (col.isSet()) {
-                    col.calculated_value = col.value;
-                } else if (prev && calc_cb) {
-                    col.calculated_value = calc_cb();
-                } else {
-                    col.calculated_value = default_value;
-                }
-            };
+            return result;
         };
-
-        var CalcCur = function(col, calc_cb) {
-            this.calc = function() {
-                col.calculated_value = calc_cb();
-            };
-        };
-
-        var calcFunctions = [
-            new CalcPrev(raw_d_mlg, 0, function () {
-                var result = raw_mlg.calculated_value - prev.raw_mlg.calculated_value;
-                return (result < 0 ? 0 : result);
-            }),
-            new CalcCur(d_mlg, function() { return rally.adjustMilleage(raw_d_mlg.calculated_value); }),
-            new CalcPrev(mlg, 0, function () {
-                if (raw_mlg.calculated_value === 0) {
-                    return 0;
-                } else {
-                    return prev.mlg.calculated_value + d_mlg.calculated_value;
-                }
-            }),
-            new CalcPrev(cas, NaN, function () { return prev.cas.calculated_value; }),
-            new CalcPrev(delay, 0, null),
-            new CalcPrev(d_time, 0, function () { return (raw_d_mlg.calculated_value * 3600) / prev.cas.calculated_value + delay.calculated_value; }),
-            new CalcPrev(time, 0, function () { return prev.time.calculated_value + d_time.calculated_value; }),
-            new CalcPrev(tod, 0, function () {
-                return prev.tod.calculated_value + (d_time.calculated_value + prev.err_time.calculated_value) * 1000;
-            }),
-            new CalcPrev(raw_mlg, 0, function () {
-                if (mlg.isSet() && raw_mlg.value === null) {
-                    return prev.raw_mlg.calculated_value + (mlg.calculated_value - prev.mlg.calculated_value);
-                } else {
-                    return 0;
-                }
-            }),
-            new CalcPrev(err_time, 0, function() {
-                var v = 0;
-                if (tod.isSet()) {
-                    v = prev.tod.calculated_value + (d_time.calculated_value + prev.err_time.calculated_value) * 1000 - tod.value;
-                    v /= 1000;
-                }
-                return v;
-            }),
-        ];
-
-        calcFunctions.forEach(function (f) {
-            f.calc();
-        });
-    },
-};
-
-RallyInstruction.prototype.Column = function(index, name, label, is_db, format_cb) {
-    this.index = index;
-    this.name = name;
-    this.label = label;
-    this.is_db = is_db;
-    this.format_cb = format_cb;
-
-    Object.defineProperty(this, 'value', {
-        get: function() {
-            if (this.instance) {
-                return this.format_cb(this.instance[this.name]);
-            }
-        },
-        set: function(v) {
-            if (this.instance) {
-                this.instance[this.name] = this.format_cb(v);
-            }
-        },
-    });
-    Object.defineProperty(this, 'display_value', {
-        get: function() {
-            if (this.instance) {
-                return (this.isSet() ? this.value : this.calculated_value);
-            }
-        },
-    });
-};
-
-RallyInstruction.prototype.Column.prototype = {
-    index: null,
-    name: null,
-    label: null,
-    is_db: null,
-    calculated_value: null,
-    instance: null,
-
-    cloneWith: function(instance) {
-        var clone = new RallyInstruction.prototype.Column();
-        Object.assign(clone, this);
-        clone.instance = instance;
-        return clone;
     },
 
-    isCalculated: function() {
-        if (!this.instance) {
-            throw "Instance not set";
-        }
-        return this.value === null;
-    },
-
-    isSet: function() {
-        if (!this.instance) {
-            throw "Instance not set";
-        }
-        return this.is_db && this.value !== null;
-    },
-
-    toString: function() {
-        return this.display_value;
-    },
-};
-
-RallyInstruction.prototype.parseFixedFloat = function(f) {
-    return function(v) {
+    parseFloat: function(v) {
         var result = Number.parseFloat(v);
         if (isNaN(result)) {
             result = null;
-        } else {
-            result = result.toFixed(f);
         }
         return result;
-    };
+    },
+
+    parseInt: function(v) {
+        var result = Number.parseInt(v);
+        if (isNaN(result)) {
+            result = null;
+        }
+        return result;
+    },
+
+    calculate: function(rally, prev) {
+        var cur = this;
+        this.columns_calc_order.forEach(function (c) {
+            c.calc(rally, prev, cur);
+        });
+    },
 };
 
-RallyInstruction.prototype.parseFloat = function(v) {
-    var result = Number.parseFloat(v);
-    if (isNaN(result)) {
-        result = null;
-    }
-    return result;
+window.RallyInstructionColumn = function(value, props) {
+    this.name = props.name;
+    this.label = props.label;
+    this.default_value = props.default_value;
+    this.format_cb = props.format_cb;
+    this.calc_if_prev_cb = props.calc_if_prev_cb;
+    this.calc_always_cb = props.calc_always_cb;
+    this.read_only = (props.read_only ? true : false);
+
+    this.calculated_value = value;
+    this.stored_value = value;
+
+    Object.defineProperty(this, 'value', {
+        get: function() {
+            return (this.stored_value !== null ? this.stored_value : this.calculated_value);
+        },
+    });
 };
 
-RallyInstruction.prototype.parseInt = function(v) {
-    var result = Number.parseInt(v);
-    if (isNaN(result)) {
-        result = null;
-    }
-    return result;
+RallyInstructionColumn.prototype = {
+    calc: function(rally, prev, cur) {
+        var val = null;
+        if (this.isSet()) {
+            val = this.value;
+        } else if (this.calc_always_cb) {
+            val = this.calc_always_cb.apply(this, arguments);
+        } else if (prev && this.calc_if_prev_cb) {
+            val = this.calc_if_prev_cb.apply(this, arguments);
+        } else {
+            val = this.default_value;
+        }
+        this.calculated_value = val;
+    },
+
+    isSet: function() {
+        return this.stored_value !== null;
+    },
+
+    toString: function() {
+        var value = this.value;
+        if (this.format_cb) {
+            value = this.format_cb(value);
+        }
+        return value;
+    },
 };
 
-RallyInstruction.prototype.columnDefs = [
-    new RallyInstruction.prototype.Column(0,   'instr',        'Instr',            true,    RallyInstruction.prototype.parseFixedFloat(1)),
-    new RallyInstruction.prototype.Column(1,   'raw_mlg',      'Raw Mlg',          true,    RallyInstruction.prototype.parseFloat),
-    new RallyInstruction.prototype.Column(2,   'raw_d_mlg',    'Raw &Delta;Mlg',   false,   RallyInstruction.prototype.parseFloat),
-    new RallyInstruction.prototype.Column(3,   'mlg',          'Mlg',              true,    RallyInstruction.prototype.parseFloat),
-    new RallyInstruction.prototype.Column(4,   'd_mlg',        '&Delta;Mlg',       false,   RallyInstruction.prototype.parseFloat),
-    new RallyInstruction.prototype.Column(5,   'cas',          'CAS',              true,    RallyInstruction.prototype.parseInt),
-    new RallyInstruction.prototype.Column(6,   'delay',        'Delay',            true,    RallyInstruction.prototype.parseFloat),
-    new RallyInstruction.prototype.Column(7,   'tod',          'TOD',              true,    RallyInstruction.prototype.parseInt),
-    new RallyInstruction.prototype.Column(8,   'time',         'Time',             false,   RallyInstruction.prototype.parseInt),
-    new RallyInstruction.prototype.Column(9,   'd_time',       '&Delta;Time',      false,   RallyInstruction.prototype.parseFloat),
-    new RallyInstruction.prototype.Column(10,  'err_time',     'Err Time',         false,   RallyInstruction.prototype.parseFloat),
+
+RallyInstruction.prototype.column_defs_display_order = [
+    {
+        name: 'instr',
+        label: 'Instr',
+        format_cb: RallyInstruction.prototype.parseFixedFloat(1),
+    }, {
+        name: 'raw_mlg',
+        label: 'Raw Mlg',
+        default_value: 0,
+        format_cb: RallyInstruction.prototype.parseFloat,
+        calc_if_prev_cb: function(rally, prev, cur) {
+            if (cur.mlg.isSet() && !cur.raw_mlg.isSet()) {
+                return prev.raw_mlg.value + (cur.mlg.value - prev.mlg.value);
+            } else {
+                return 0;
+            }
+        },
+    }, {
+        name: 'raw_d_mlg',
+        label: 'Raw &Delta;Mlg',
+        read_only: true,
+        default_value: 0,
+        format_cb: RallyInstruction.prototype.parseFloat,
+        calc_if_prev_cb: function(rally, prev, cur) {
+            var result = cur.raw_mlg.value - prev.raw_mlg.value;
+            return (result < 0 ? 0 : result);
+        },
+    }, {
+        name: 'mlg',
+        label: 'Mlg',
+        default_value: 0,
+        format_cb: RallyInstruction.prototype.parseFloat,
+        calc_if_prev_cb: function(rally, prev, cur) {
+            if (cur.raw_mlg.value === 0) {
+                return 0;
+            } else {
+                return prev.mlg.value + cur.d_mlg.value;
+            }
+        },
+    }, {
+        name: 'd_mlg',
+        label: '&Delta;Mlg',
+        read_only: true,
+        default_value: 0,
+        format_cb: RallyInstruction.prototype.parseFloat,
+        calc_always_cb: function(rally, prev, cur) {
+            return rally.adjustMilleage(cur.raw_d_mlg.value);
+        },
+    }, {
+        name: 'cas',
+        label: 'CAS',
+        default_value: 0,
+        format_cb: RallyInstruction.prototype.parseInt,
+        calc_if_prev_cb: function(rally, prev, cur) {
+            return prev.cas.value;
+        },
+    }, {
+        name: 'delay',
+        label: 'Delay',
+        default_value: 0,
+        format_cb: RallyInstruction.prototype.parseFloat,
+    }, {
+        name: 'tod',
+        label: 'TOD',
+        format_cb: RallyInstruction.prototype.parseInt,
+        calc_if_prev_cb: function(rally, prev, cur) {
+            var value = prev.tod.value;
+            value += (cur.d_time.value + prev.err_time.value) * 1000;
+            return value;
+        },
+    }, {
+        name: 'time',
+        label: 'Time',
+        default_value: 0,
+        read_only: true,
+        format_cb: RallyInstruction.prototype.parseInt,
+        calc_if_prev_cb: function(rally, prev, cur) {
+            return prev.time.value + cur.d_time.value;
+        },
+    }, {
+        name: 'd_time',
+        label: '&Delta;Time',
+        default_value: 0,
+        read_only: true,
+        format_cb: RallyInstruction.prototype.parseFloat,
+        calc_if_prev_cb: function(rally, prev, cur) {
+            var value = cur.raw_d_mlg.value * 3600;
+            value /= prev.cas.value;
+            value += cur.delay;
+            return value;
+        },
+    }, {
+        name: 'err_time',
+        label: 'Err Time',
+        default_value: 0,
+        read_only: true,
+        format_cb: RallyInstruction.prototype.parseFloat,
+        calc_if_prev_cb: function(rally, prev, cur) {
+            var value = 0;
+            if (cur.tod.isSet()) {
+                value = prev.tod.value - cur.tod.value;
+                value /= 1000;
+                value += cur.d_time.value + prev.err_time.value;
+            }
+            return value;
+        },
+    },
+];
+
+RallyInstruction.prototype.column_defs_display_order.forEach(function (col) {
+    RallyInstruction.prototype.column_defs_by_name[col.name] = col;
+});
+
+RallyInstruction.prototype.column_defs_calc_order = [
+    'instr',
+    'raw_d_mlg',
+    'd_mlg',
+    'mlg',
+    'cas',
+    'd_time',
+    'time',
+    'tod',
+    'raw_mlg',
+    'err_time',
 ];
 
 }());

@@ -55,7 +55,7 @@ RallyUI.prototype = {
 
     selected: null,
 
-    columnState: [],
+    columnState: {},
 
     timerBody: null,
 
@@ -65,16 +65,16 @@ RallyUI.prototype = {
 
     modalActive: false,
 
-    showColumn: function(index, show) {
+    showColumn: function(name, show) {
         if (show) {
-            $('th[data-col=\''+index+'\']').show();
-            $('td[data-col=\''+index+'\']').show();
+            $('th[data-col=\''+name+'\']').show();
+            $('td[data-col=\''+name+'\']').show();
         } else {
-            $('th[data-col=\''+index+'\']').hide();
-            $('td[data-col=\''+index+'\']').hide();
+            $('th[data-col=\''+name+'\']').hide();
+            $('td[data-col=\''+name+'\']').hide();
         }
-        $('label[data-col=\''+index+'\'] input').prop('checked', show);
-        this.columnState[index] = show;
+        $('label[data-col=\''+name+'\'] input').prop('checked', show);
+        this.columnState[name] = show;
 
         // Force table layout to update
         $('#instructions').trigger( "resize" );
@@ -90,23 +90,23 @@ RallyUI.prototype = {
         hideshow.children().remove();
 
         var tr = $('<tr />');
-        RallyInstruction.prototype.columnDefs.forEach(function (col) {
-            var th = $('<th />').attr('data-col', col.index);
+        RallyInstruction.prototype.column_defs_display_order.forEach(function (col) {
+            var th = $('<th />').attr('data-col', col.name);
             th.html(col.label);
 
             th.on('dblclick', function (e) {
-                ui.showColumn(col.index, false);
+                ui.showColumn(col.name, false);
             });
             tr.append(th);
 
             var input = $('<input type=checkbox checked/>');
             input.on('change', function (e) {
-                ui.showColumn(col.index, e.target.checked);
+                ui.showColumn(col.name, e.target.checked);
             });
 
-            hideshow.append($('<label />').attr('data-col', col.index).append(input).append(col.label));
+            hideshow.append($('<label />').attr('data-col', col.name).append(input).append(col.label));
 
-            ui.columnState[col.index] = true;
+            ui.columnState[col.name] = true;
         });
 
         thead.append(tr);
@@ -117,8 +117,8 @@ RallyUI.prototype = {
                 hide: {
                     name: 'Hide',
                     callback: function (key, opt) {
-                        var index = this.attr('data-col');
-                        ui.showColumn(index, false);
+                        var name = this.attr('data-col');
+                        ui.showColumn(name, false);
                         return true;
                     },
                 },
@@ -154,7 +154,7 @@ RallyUI.prototype = {
                     callback: function (key, opt) {
                         var tr = this.closest('tr');
                         var instr = instrFromRow(tr);
-                        ui.rally.deleteInstruction(ui.rally.instruction(instr).id);
+                        ui.rally.deleteInstruction(ui.rally.instruction(instr));
                         return true;
                     },
                 },
@@ -183,13 +183,13 @@ RallyUI.prototype = {
         var ui = this;
         var tr = $('<tr />').attr('data-row', instr.instr).attr('tabindex', 0);
 
-        instr.columns.forEach(function (col, index) {
-            var td = $('<td />').attr('data-col', index);
-            var calculated = col.isCalculated();
+        instr.columns.forEach(function (col) {
+            var td = $('<td />').attr('data-col', col.name);
+            var calculated = !col.isSet();
             if (!calculated) {
                 td.addClass('notcalc');
             }
-            var pretty_val = col.toString();
+            var pretty_val = col.value;
             if (col.name == 'delay') {
                 if (pretty_val === 0) {
                     pretty_val = '';
@@ -205,7 +205,7 @@ RallyUI.prototype = {
                     pretty_val = pretty_val.toFixed(3);
                 }
             }
-            if (ui.editState && ui.isSelected(instr.instr) && col.is_db) {
+            if (ui.editState && ui.isSelected(instr.instr) && !col.read_only) {
                 var input = $('<input />');
                 input.attr('type', 'text');
                 input.attr('size', 5);
@@ -224,9 +224,9 @@ RallyUI.prototype = {
                     if (input.val().length > 0) {
                         val = input.val();
                     }
-                    if (val != col.value) {
+                    if (val != col.stored_value) {
                         try {
-                            ui.rally.setValue(instr.id, col.index, val);
+                            ui.rally.setValue(instr, col, val);
                         } catch (err) {
                             ui.alertDanger('Exception', err.message);
                             input.val(input.attr('defaultValue'));
@@ -249,7 +249,7 @@ RallyUI.prototype = {
             }
             tr.append(td);
 
-            if (!ui.columnState[index])
+            if (!ui.columnState[col.name])
                 td.hide();
         });
 
@@ -687,9 +687,9 @@ RallyUI.prototype = {
     insertInstruction: function(relative) {
         var ui = this;
         if (ui.selected) {
-            var instr = ui.rally.instruction(ui.selected.row);
-            ui.rally.addInstruction(instr.instr + relative).then(function (instr) {
-                ui.selectInstruction(instr);
+            var instruction = ui.rally.instruction(ui.selected.row);
+            ui.rally.addInstruction(instruction.instr.value + relative).then(function (instruction) {
+                ui.selectInstruction(instruction);
             });
         }
     },
