@@ -19,6 +19,10 @@ window.RallyUI = function(rally) {
         ui.rally.reset();
     });
 
+    $('#toggle-timer').on('click', function (e) {
+        ui.toggleTimer();
+    }).addClass('active');
+
     $(document).on('keydown', function (e) {
         ui.handleKeyDownGlobal(e);
     });
@@ -561,15 +565,7 @@ RallyUI.prototype = {
         var timerPanel = $('#timer-panel');
         this.timerBody = $('#timer-value');
         timerPanel.css('position', 'fixed');
-        var position = ui.timerPosition();
-        if (position.left + timerPanel.width() > container.width()) {
-            position.left = container.width() - timerPanel.width();
-        }
-        if (position.top + timerPanel.height() > container.height()) {
-            position.top = container.height() - timerPanel.height();
-        }
-        ui.timerPosition(position);
-        timerPanel.css(position);
+        ui.ensureTimerVisible();
         timerPanel.draggable({
             handle: '.move-grip',
             containment: container,
@@ -606,7 +602,9 @@ RallyUI.prototype = {
         if (this.timerInterval) {
             clearInterval(this.timerInterval);
         }
-        this.timerInterval = setInterval(this.updateTimer.bind(this), interval);
+        if (interval > 0) {
+            this.timerInterval = setInterval(this.updateTimer.bind(this), interval);
+        }
     },
 
     updateTimer: function() {
@@ -662,6 +660,37 @@ RallyUI.prototype = {
 
     timerResetLaps: function() {
         this.laps.children().remove();
+    },
+
+    ensureTimerVisible: function() {
+        var ui = this;
+        var container = $('body');
+        var timerPanel = $('#timer-panel');
+        var position = ui.timerPosition();
+        if (position.left + timerPanel.width() > container.width()) {
+            position.left = container.width() - timerPanel.width();
+        }
+        if (position.top + timerPanel.height() > container.height()) {
+            position.top = container.height() - timerPanel.height();
+        }
+        ui.timerPosition(position);
+        timerPanel.css(position);
+    },
+
+    toggleTimer: function() {
+        var button = $('#toggle-timer');
+        var timerPanel = $('#timer-panel');
+        var ui = this;
+        if (timerPanel.hasClass('in')) {
+            button.removeClass('active');
+            ui.setTimerInterval(0);
+            timerPanel.removeClass('in');
+        } else {
+            ui.ensureTimerVisible();
+            button.addClass('active');
+            ui.setTimerInterval(100);
+            timerPanel.addClass('in');
+        }
     },
 
     alertDanger: function(title, message) {
