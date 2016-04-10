@@ -255,6 +255,8 @@ RallyUI.prototype = {
                 if (pretty_val === 0) {
                     pretty_val = '';
                 }
+            } else if (col.name == 'notes') {
+                td.removeClass('notcalc');
             } else if (typeof pretty_val == 'number') {
                 if (col.name == 'instr') {
                     pretty_val = pretty_val.toFixed(1);

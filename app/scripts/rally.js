@@ -18,7 +18,7 @@ Rally.prototype = {
 
         // Define a schema
         db.version(1).stores({
-            instructions: [ 'id++', '&instr', 'raw_mlg', 'cas', 'delay', 'mlg', 'time'].join()
+            instructions: [ 'id++', '&instr', 'raw_mlg', 'cas', 'delay', 'mlg', 'time', 'notes'].join()
         });
 
         // Open the database
@@ -494,7 +494,10 @@ RallyInstruction.prototype.column_defs_display_order = [
             }
             return value;
         },
-    },
+    }, {
+        name: 'notes',
+        label: 'Notes',
+    }
 ];
 
 RallyInstruction.prototype.column_defs_display_order.forEach(function (col) {

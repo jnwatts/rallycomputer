@@ -45,6 +45,10 @@ th {
                                   not supported by any browser */
 }
 
+th[data-col='notes'] {
+    width: 100px;
+}
+
 #timer-panel {
     width: 170px;
 }
