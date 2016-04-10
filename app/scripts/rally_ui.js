@@ -251,7 +251,7 @@ RallyUI.prototype = {
                 td.addClass('notcalc');
             }
             var pretty_val = col.value;
-            if (col.name == 'delay') {
+            if (col.name == 'delay' || col.name == 'err_time') {
                 if (pretty_val === 0) {
                     pretty_val = '';
                 }
