@@ -46,6 +46,10 @@ window.RallyUI = function(rally) {
 
     ui.createTimer();
 
+    ui.editMode(false);
+
+    ui.renderInstructionsHeader();
+
     ui.showColumn();
 };
 
