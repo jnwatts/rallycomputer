@@ -21,7 +21,7 @@ window.RallyUI = function(rally) {
 
     $('#toggle-timer').on('click', function (e) {
         ui.toggleTimer();
-    }).addClass('active');
+    });
 
     $(document).on('keydown', function (e) {
         ui.handleKeyDownGlobal(e);
@@ -623,7 +623,10 @@ RallyUI.prototype = {
             ui.timerResetLaps();
         });
 
-        timerPanel.addClass('in');
+        if (ui.rally.getConfig('timer_visible') == 'true') {
+            timerPanel.addClass('in');
+            $('#toggle-timer').addClass('active');
+        }
     },
 
     setTimerInterval: function(interval) {
@@ -709,16 +712,18 @@ RallyUI.prototype = {
         var button = $('#toggle-timer');
         var timerPanel = $('#timer-panel');
         var ui = this;
-        if (timerPanel.hasClass('in')) {
-            button.removeClass('active');
-            ui.setTimerInterval(0);
-            timerPanel.removeClass('in');
-        } else {
+        var visible = !timerPanel.hasClass('in');
+        if (visible) {
             ui.ensureTimerVisible();
             button.addClass('active');
             ui.setTimerInterval(100);
             timerPanel.addClass('in');
+        } else {
+            button.removeClass('active');
+            ui.setTimerInterval(0);
+            timerPanel.removeClass('in');
         }
+        ui.rally.setConfig('timer_visible', JSON.stringify(visible));
     },
 
     alertDanger: function(title, message) {
