@@ -124,7 +124,7 @@ Rally.prototype = {
             val = rally.parseInstruction(col.format_cb(val));
         } else if (col.name == 'tod') {
             val = rally.parseTime(val);
-        } else {
+        } else if (col.format_cb) {
             val = col.format_cb(val);
         }
         obj[col.name] = val;
