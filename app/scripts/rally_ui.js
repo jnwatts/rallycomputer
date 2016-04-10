@@ -45,6 +45,8 @@ window.RallyUI = function(rally) {
     ui.updateTimeFormats();
 
     ui.createTimer();
+
+    ui.showColumn();
 };
 
 RallyUI.prototype = {
@@ -70,15 +72,41 @@ RallyUI.prototype = {
     modalActive: false,
 
     showColumn: function(name, show) {
-        if (show) {
-            $('th[data-col=\''+name+'\']').show();
-            $('td[data-col=\''+name+'\']').show();
+        var ui = this;
+        var setVisible = function(name, show) {
+            if (show) {
+                $('th[data-col=\''+name+'\']').show();
+                $('td[data-col=\''+name+'\']').show();
+            } else {
+                $('th[data-col=\''+name+'\']').hide();
+                $('td[data-col=\''+name+'\']').hide();
+            }
+            $('label[data-col=\''+name+'\'] input').prop('checked', show);
+        };
+        if (name) {
+            setVisible(name, show);
+            ui.columnState[name] = show;
+            ui.rally.setConfig('column_state', JSON.stringify(this.columnState));
         } else {
-            $('th[data-col=\''+name+'\']').hide();
-            $('td[data-col=\''+name+'\']').hide();
+            var columnState = ui.rally.getConfig('column_state');
+            try {
+                columnState = JSON.parse(columnState);
+            } catch (e) { /* do nothing */ }
+            if (!columnState) {
+                columnState = {
+                    'raw_mlg': false,
+                    'raw_d_mlg': false,
+                    'time': false,
+                };
+            }
+            RallyInstruction.prototype.column_defs_display_order.forEach(function (def) {
+                if (!columnState.hasOwnProperty(def.name)) {
+                    columnState[def.name] = true;
+                }
+                setVisible(def.name, columnState[def.name]);
+            });
+            ui.columnState = columnState;
         }
-        $('label[data-col=\''+name+'\'] input').prop('checked', show);
-        this.columnState[name] = show;
 
         // Force table layout to update
         $('#instructions').trigger( "resize" );
