@@ -144,7 +144,7 @@
     'use strict';
     var rally = new Rally();
 
-    Dexie.Promise.on('error', function(err) {
+    window.addEventListener("unhandledrejection", function(err, promise) {
         console.log(err.stack || err);
     });
 
