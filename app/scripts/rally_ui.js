@@ -373,7 +373,7 @@ RallyUI.prototype = {
         var count;
         var ui = this;
         var input = $(e.target);
-        var index = Number.parseFloat(input.closest('td').attr('data-col'));
+        var index = input.closest('td').attr('data-col');
         var handled = true;
         if (ui.modalActive) {
             return;
@@ -557,7 +557,7 @@ RallyUI.prototype = {
         }
         if (target) {
             target.row = Number.parseFloat(target.row);
-            target.col = Number.parseInt(target.col);
+            target.col = target.col || null;
         }
         if (old_selected !== null) {
             var old_tr = $('tr[data-row=\''+old_selected.row+'\']');
