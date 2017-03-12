@@ -731,7 +731,12 @@ RallyUI.prototype = {
     },
 
     timerLap: function() {
-        this.laps.append($('<li />').text(this.formatTimer(this.rally.now())));
+        var lap = this.rally.now();
+        this.laps.append($('<li />').text(this.formatTimer(lap)));
+        if (this.selected) {
+            var instr = this.rally.instruction(this.selected.row);
+            this.rally.setValue(instr, 'tod', this.formatAbsTime(lap));
+        }
     },
 
     timerResetLaps: function() {
