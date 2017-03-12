@@ -392,10 +392,12 @@ RallyInstruction.prototype.column_defs_display_order = [
     {
         name: 'instr',
         label: 'NRI',
+        description: 'Number Route Instruction',
         format_cb: RallyInstruction.prototype.parseFixedFloat(1),
     }, {
         name: 'raw_mlg',
         label: 'Raw Mlg',
+        description: 'Unmodified overall milleage from rally instructions',
         default_value: 0,
         format_cb: RallyInstruction.prototype.parseFloat,
         calc_if_prev_cb: function(rally, prev, cur) {
@@ -408,6 +410,7 @@ RallyInstruction.prototype.column_defs_display_order = [
     }, {
         name: 'raw_d_mlg',
         label: 'Raw &Delta;Mlg',
+        description: 'Unmodified delta milleage between NRIs',
         read_only: true,
         default_value: 0,
         format_cb: RallyInstruction.prototype.parseFloat,
@@ -418,6 +421,7 @@ RallyInstruction.prototype.column_defs_display_order = [
     }, {
         name: 'mlg',
         label: 'Mlg',
+        description: 'Adjusted overall milleage: Defaults to calculated, can be overriden as needed',
         default_value: 0,
         format_cb: RallyInstruction.prototype.parseFloat,
         calc_if_prev_cb: function(rally, prev, cur) {
@@ -430,6 +434,7 @@ RallyInstruction.prototype.column_defs_display_order = [
     }, {
         name: 'd_mlg',
         label: '&Delta;Mlg',
+        description: 'Delta milleage between NRIs',
         read_only: true,
         default_value: 0,
         format_cb: RallyInstruction.prototype.parseFloat,
@@ -439,6 +444,7 @@ RallyInstruction.prototype.column_defs_display_order = [
     }, {
         name: 'cas',
         label: 'CAS',
+        description: 'Change Average Speed',
         default_value: 0,
         format_cb: RallyInstruction.prototype.parseInt,
         calc_if_prev_cb: function(rally, prev, cur) {
@@ -447,11 +453,13 @@ RallyInstruction.prototype.column_defs_display_order = [
     }, {
         name: 'delay',
         label: 'Delay',
+        description: 'An additional delay at instruciton',
         default_value: 0,
         format_cb: RallyInstruction.prototype.parseFloat,
     }, {
         name: 'tod',
         label: 'TOD',
+        description: 'Time Of Day: Calculated from rally-speed and milleage, can be overriden as needed',
         format_cb: RallyInstruction.prototype.parseInt,
         calc_if_prev_cb: function(rally, prev, cur) {
             var value = prev.tod.value;
@@ -461,6 +469,7 @@ RallyInstruction.prototype.column_defs_display_order = [
     }, {
         name: 'time',
         label: 'Time',
+        description: 'Stop-watch time since start of rally',
         default_value: 0,
         read_only: true,
         format_cb: RallyInstruction.prototype.parseInt,
@@ -470,6 +479,7 @@ RallyInstruction.prototype.column_defs_display_order = [
     }, {
         name: 'd_time',
         label: '&Delta;Time',
+        description: 'Delta time between NRIs',
         default_value: 0,
         read_only: true,
         format_cb: RallyInstruction.prototype.parseFloat,
@@ -482,6 +492,7 @@ RallyInstruction.prototype.column_defs_display_order = [
     }, {
         name: 'err_time',
         label: 'Err Time',
+        description: 'Error time at this NRI',
         default_value: 0,
         read_only: true,
         format_cb: RallyInstruction.prototype.parseFloat,
