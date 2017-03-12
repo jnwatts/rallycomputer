@@ -120,6 +120,11 @@ Rally.prototype = {
     setValue: function (instruction, col, val) {
         var rally = this;
         var obj = {};
+        if (typeof col === 'string' || col instanceof String) {
+            col = instruction.columns.find(function (c) {
+                return c.name == col;
+            });
+        }
         if (col.name == 'instr') {
             val = rally.parseInstruction(col.format_cb(val));
         } else if (col.name == 'tod') {
