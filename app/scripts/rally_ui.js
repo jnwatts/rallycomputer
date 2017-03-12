@@ -726,7 +726,7 @@ RallyUI.prototype = {
             };
             this.formatTimer = function(val) { return tenths(val, 'HH:mm'); };
             this.formatAbsTime = function(val) { return tenths(val, 'HH:mm'); };
-            this.formatRelTime = function(val) { return (val > 0 ? tenths(val * 1000, 'm') : '0:00'); };
+            this.formatRelTime = function(val) { return (val > 0 ? tenths(val * 1000, 'm') : '0.000'); };
         }
     },
 
