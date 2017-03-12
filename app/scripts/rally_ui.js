@@ -655,8 +655,10 @@ RallyUI.prototype = {
         });
 
         if (ui.rally.getConfig('timer_visible') == 'true') {
-            timerPanel.addClass('in');
+            timerPanel.show();
             $('#toggle-timer').addClass('active');
+        } else {
+            timerPanel.hide();
         }
     },
 
@@ -743,18 +745,18 @@ RallyUI.prototype = {
         var button = $('#toggle-timer');
         var timerPanel = $('#timer-panel');
         var ui = this;
-        var visible = !timerPanel.hasClass('in');
-        if (visible) {
+        var visible = timerPanel.is(':visible');
+        if (!visible) {
+            timerPanel.show();
             ui.ensureTimerVisible();
             button.addClass('active');
             ui.setTimerInterval(100);
-            timerPanel.addClass('in');
         } else {
             button.removeClass('active');
             ui.setTimerInterval(0);
-            timerPanel.removeClass('in');
+            timerPanel.hide();
         }
-        ui.rally.setConfig('timer_visible', JSON.stringify(visible));
+        ui.rally.setConfig('timer_visible', JSON.stringify(!visible));
     },
 
     alertDanger: function(title, message) {
