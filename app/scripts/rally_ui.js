@@ -141,6 +141,9 @@ RallyUI.prototype = {
             var th = $('<th />').attr('data-col', col.name);
             th.addClass('instruction-column');
             th.html(col.label);
+            if (col.description) {
+                th.attr('title', col.description);
+            }
 
             th.on('dblclick', function (e) {
                 ui.showColumn(col.name, false);
@@ -153,6 +156,9 @@ RallyUI.prototype = {
             });
 
             var label = ' <span class="col_label">' + col.label + '</span>';
+            if (col.description) {
+                label += ': <span class="col_description">' + col.description + '</span>';
+            }
             hideshow.append($('<label class="list-group-item" />').attr('data-col', col.name).append(input).append(label));
 
             ui.columnState[col.name] = true;

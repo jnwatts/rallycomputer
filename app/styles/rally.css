@@ -7,6 +7,10 @@
     display: list-item;
 }
 
+#hideshow .col_description {
+    font-weight: normal;
+}
+
 .floatThead-container, table#instructions thead {
     background: white;
 }
