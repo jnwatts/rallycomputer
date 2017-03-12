@@ -160,6 +160,7 @@ Rally.prototype = {
     odomFactor: function(val) {
         if (arguments.length > 0) {
             this.setConfig('odom_factor', val);
+            this.calculate();
         }
         val = this.getConfig('odom_factor');
         if (val === null) {
