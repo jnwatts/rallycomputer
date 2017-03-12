@@ -1,9 +1,9 @@
-ul#hideshow {
+#hideshow ul {
     list-style: none;
     padding: 1em;
 }
 
-ul#hideshow label {
+#hideshow label {
     display: list-item;
 }
 

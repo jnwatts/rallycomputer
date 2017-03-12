@@ -23,6 +23,10 @@ window.RallyUI = function(rally) {
         ui.toggleTimer();
     });
 
+    $('#hideshow div.panel-heading').on('click', function (e) {
+        $('#hideshow ul').collapse('toggle');
+    });
+
     $(document).on('keydown', function (e) {
         ui.handleKeyDownGlobal(e);
     });
@@ -125,10 +129,11 @@ RallyUI.prototype = {
     renderInstructionsHeader: function() {
         var table = $('#instructions');
         var thead = table.children('thead');
-        var hideshow = $('#hideshow');
+        var hideshow_body = $('#hideshow div.panel-body');
         var ui = this;
 
         thead.children().remove();
+        var hideshow = $('#hideshow ul');
         hideshow.children().remove();
 
         var tr = $('<tr />');
@@ -147,7 +152,8 @@ RallyUI.prototype = {
                 ui.showColumn(col.name, e.target.checked);
             });
 
-            hideshow.append($('<label />').attr('data-col', col.name).append(input).append(col.label));
+            var label = ' <span class="col_label">' + col.label + '</span>';
+            hideshow.append($('<label class="list-group-item" />').attr('data-col', col.name).append(input).append(label));
 
             ui.columnState[col.name] = true;
 
