@@ -469,7 +469,7 @@ RallyInstruction.prototype.column_defs_display_order = [
     }, {
         name: 'time',
         label: 'Time',
-        description: 'Stop-watch time since start of rally',
+        description: 'Stop-watch time in seconds since start of rally',
         default_value: 0,
         read_only: true,
         format_cb: RallyInstruction.prototype.parseInt,
