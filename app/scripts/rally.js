@@ -391,7 +391,7 @@ RallyInstructionColumn.prototype = {
 RallyInstruction.prototype.column_defs_display_order = [
     {
         name: 'instr',
-        label: 'Instr',
+        label: 'NRI',
         format_cb: RallyInstruction.prototype.parseFixedFloat(1),
     }, {
         name: 'raw_mlg',
