@@ -34,7 +34,7 @@ Rally.prototype = {
     cachedClockAdj: 0,
 
     now: function() {
-        return Date.now() + this.cachedClockAdj;
+        return Date.now() + this.cachedClockAdj * 1000.0;
     },
 
     calculate: function() {
