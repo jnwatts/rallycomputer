@@ -48,6 +48,13 @@
         <span class="glyphicon glyphicon-time"></span>
         Timer
         </button>
+        <button type="button" class="btn btn-default btn-sm" id="export" tabindex="4">
+        Export
+        </button>
+        <button type="button" class="btn btn-default btn-sm" id="import" tabindex="4">
+        Import
+        </button>
+        <input type="file" id="import-input" />
     </div><br>
     <div class="form-group">
         <label>Rally speed <input type="text" size="3" class="form-control" id="edit-rally-speed" tabindex="3" title="Speeds not equal to this will be highlighted."> </label>
@@ -116,7 +123,9 @@
 <script src="/bower_components/moment/moment.js"></script>
 <script src="/bower_components/jquery-ui/jquery-ui.js"></script>
 <script src="/bower_components/jqueryui-touch-punch/jquery.ui.touch-punch.js"></script>
+<script src="/bower_components/file-saver/FileSaver.js"></script>
 <!-- endbower -->
+<script src="bower_components/fileapi/dist/FileAPI.html5.js"></script>
 <!-- endbuild -->
 
 <!-- build:js scripts/plugins.js -->

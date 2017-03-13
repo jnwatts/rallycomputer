@@ -23,6 +23,24 @@ window.RallyUI = function(rally) {
         ui.toggleTimer();
     });
 
+    $('#export').on('click', function (e) {
+        ui.export();
+    });
+
+    var import_input = $('#import-input');
+    $('#import').on('click', function (e) {
+        import_input.trigger('click');
+    });
+    FileAPI.event.on(import_input[0], 'change', function (e) {
+        var files = FileAPI.getFiles(e);
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var rally_json = e.target.result;
+            ui.import(rally_json);
+        }
+        reader.readAsText(files[0]);
+    });
+
     $('#hideshow div.panel-heading').on('click', function (e) {
         $('#hideshow ul').collapse('toggle');
     });
@@ -80,6 +98,24 @@ RallyUI.prototype = {
     modalActive: false,
 
     menu_hidden_columns: {},
+
+    export: function() {
+        var ui = this;
+        return ui.rally.serialize().then(function (rally_obj) {
+            var blob = new Blob([JSON.stringify(rally_obj)], {type: "text/plain;charset=utf-8"});
+            saveAs(blob, "RallyComputer.json");
+        });
+    },
+
+    import: function(rally_json) {
+        var ui = this;
+        var rally_obj = JSON.parse(rally_json);
+        var ui_config_keys = Object.keys(ui);
+        var rally_config_keys = Object.keys(ui.rally);
+
+        ui.rally.deserialize(rally_obj);
+
+    },
 
     showColumn: function(name, show) {
         var ui = this;

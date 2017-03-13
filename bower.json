@@ -14,7 +14,9 @@
     "jQuery-contextMenu": "^2.1.1",
     "moment": "^2.12.0",
     "jquery-ui": "^1.11.4",
-    "jqueryui-touch-punch": "*"
+    "jqueryui-touch-punch": "*",
+    "file-saver": "filesaver#^1.3.3",
+    "fileapi": "FileAPI#^2.0.20"
   },
   "overrides": {
     "bootstrap": {
