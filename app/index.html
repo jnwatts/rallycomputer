@@ -77,10 +77,27 @@
 
     <h3>Todo</h3>
     <ul>
+        <li>On (old?) android chrome: instruction.columns.find is not a function</li>
+        <li>Add export/import functionality
+            <ul>
+                <li>Almost done: Just need to reverse-propagate changes to config to edit boxes</li>
+                <li>Might need to make a list of bound edit boxes to dynamically locate the right edit box and update its value</li>
+            </ul>
+        </li>
+        <li>Add help-tip showing keyboard shortcuts</li>
+        <li>Default Raw Mlg back to on...</li>
+        <li>Replace normal keyboard input with <a href="http://jaywcjlove.github.io/hotkeys/">HotKeys</a>?</li>
+        <li>Rewrite Rally.calculate to use Table.orderBy &amp; Table.each instead of toArray?
+            <ul>
+                <li>Need to split "in-memory" data to only calculated data, rest stays in DB to queried as needed?</li>
+                <li>Does Dexie support "in-memory" DB?</li>
+            </ul>
+        </li>
         <li>Clock adj +/- buttons?</li>
         <li>Jump to NRI shortcut (ctrl or alt keys?)</li>
         <li>Add tulip/notes columns? (Need scanning app for that...)</li>
         <li>Re-start Time column at OMP? This is a bug! No way to enter out-times at each checkpoint!!</li>
+        <li>Per previous: TOD/Time need Raw vs Actual columns!</li>
     </ul>
 </div>
 
@@ -119,7 +136,6 @@
 <script src="/bower_components/dexie/dist/dexie.min.js"></script>
 <script src="/bower_components/jquery.floatThead/dist/jquery.floatThead.js"></script>
 <script src="/bower_components/jQuery-contextMenu/dist/jquery.contextMenu.js"></script>
-<script src="/bower_components/jQuery-contextMenu/dist/jquery.ui.position.js"></script>
 <script src="/bower_components/moment/moment.js"></script>
 <script src="/bower_components/jquery-ui/jquery-ui.js"></script>
 <script src="/bower_components/jqueryui-touch-punch/jquery.ui.touch-punch.js"></script>
@@ -156,6 +172,8 @@
     window.addEventListener("unhandledrejection", function(err, promise) {
         console.log(err.stack || err);
     });
+
+    window.rally = rally;
 
 }());
 </script>
