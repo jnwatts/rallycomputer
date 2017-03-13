@@ -1,1 +1,1360 @@
-"use strict";!function(){window.RallyUI=function(t){this.rally=t;var e=this;$("#add-instruction").on("click",function(t){e.rally.addNextInstruction().then(function(t){e.selectInstruction(t)})}),$("#edit-instruction").on("click",function(t){e.editMode(!e.editState)}),$("#reset-instructions").on("click",function(t){e.rally.reset()}),$("#toggle-timer").on("click",function(t){e.toggleTimer()}),$(document).on("keydown",function(t){e.handleKeyDownGlobal(t)}),this.editBox("#edit-rally-speed",t.rallySpeed),this.editBox("#edit-odom-factor",t.odomFactor),this.editBox("#edit-clock-adj",t.clockAdj).on("focus",function(t){e.setTimerInterval(10)}).on("blur",function(t){e.setTimerInterval(100)}),this.editCheckbox("#edit-time-seconds",t.timeSeconds).on("change",function(){e.updateTimeFormats(),e.renderInstructions()}),e.updateTimeFormats(),e.createTimer(),e.editMode(!1),e.renderInstructionsHeader(),e.showColumn()},RallyUI.prototype={checkVal:function(t){return"undefined"==typeof t||null===t?"ERR":t},editState:!1,selected:null,columnState:{},timerBody:null,timerInterval:null,laps:null,modalActive:!1,menu_hidden_columns:{},showColumn:function(t,e){var n=this,r=function(t,e){e?($("th[data-col='"+t+"']").show(),$("td[data-col='"+t+"']").show()):($("th[data-col='"+t+"']").hide(),$("td[data-col='"+t+"']").hide()),$("label[data-col='"+t+"'] input").prop("checked",e),n.menu_hidden_columns[t].visible=!e};if(t){if("instr"==t)return;r(t,e),n.columnState[t]=e,n.rally.setConfig("column_state",JSON.stringify(this.columnState))}else{var i=n.rally.getConfig("column_state");try{i=JSON.parse(i)}catch(a){}i||(i={raw_mlg:!1,raw_d_mlg:!1,time:!1}),RallyInstruction.prototype.column_defs_display_order.forEach(function(t){i.hasOwnProperty(t.name)||(i[t.name]=!0),r(t.name,i[t.name])}),n.columnState=i}$("#instructions").trigger("resize")},renderInstructionsHeader:function(){var t=$("#instructions"),e=t.children("thead"),n=$("#hideshow"),r=this;e.children().remove(),n.children().remove();var i=$("<tr />");RallyInstruction.prototype.column_defs_display_order.forEach(function(t){var e=$("<th />").attr("data-col",t.name);e.addClass("instruction-column"),e.html(t.label),e.on("dblclick",function(e){r.showColumn(t.name,!1)}),i.append(e);var a=$("<input type=checkbox checked/>");a.on("change",function(e){r.showColumn(t.name,e.target.checked)}),n.append($("<label />").attr("data-col",t.name).append(a).append(t.label)),r.columnState[t.name]=!0,r.menu_hidden_columns[t.name]={name:t.label}}),e.append(i),$.contextMenu({selector:".instruction-column",callback:function(t,e){console.log(t),console.log(e);var n=t;return r.showColumn(n,!0),!0},build:function(){var t={hide:{name:"Hide",callback:function(t,e){var n=this.attr("data-col");return r.showColumn(n,!1),!0}},show:{name:"Show",items:r.menu_hidden_columns}};return{items:t}}});var a=function(t){return Number.parseFloat(t.attr("data-row"))};$.contextMenu({selector:"tr td",items:{insert_before:{name:"Insert before",callback:function(t,e){return r.insertInstruction(-.5),!0}},insert_after:{name:"Insert after",callback:function(t,e){return r.insertInstruction(.5),!0}},separator1:{type:"cm_seperator"},"delete":{name:"Delete",callback:function(t,e){var n=this.closest("tr"),i=a(n);return r.rally.deleteInstruction(r.rally.instruction(i)),!0}}}}),t.floatThead()},renderInstructions:function(){var t=$("#instructions").children("tbody");t.children().remove();var e=this;e.rally.instructions.forEach(function(t){e.renderInstruction(t)}),$("#instructions").trigger("resize")},renderInstruction:function(t){if(null!==t){var e=$("#instructions").children("tbody"),n=this,r=$("<tr />").attr("data-row",t.instr).attr("tabindex",0);t.columns.forEach(function(e){var i=$("<td />").attr("data-col",e.name),a=!e.isSet();a||i.addClass("notcalc");var o=e.value;if("delay"==e.name||"err_time"==e.name?0===o&&(o=""):"notes"==e.name?i.removeClass("notcalc"):"number"==typeof o&&("instr"==e.name?o=o.toFixed(1):"tod"==e.name?o=n.formatAbsTime(o):"d_time"==e.name?o=n.formatRelTime(o):"cas"!=e.name&&(o=o.toFixed(3))),n.editState&&n.isSelected(t.instr)&&!e.read_only){var l=$("<input />");l.attr("type","text"),l.attr("size",5),a?(l.attr("placeholder",o),l.attr("defaultValue","")):(l.val(o),l.attr("defaultValue",o)),l.on("keydown",function(e){n.handleKeyDownInput(e,t)}),l.on("blur",function(r){var i=null;if(l.val().length>0&&(i=l.val()),i!=e.stored_value)try{n.rally.setValue(t,e,i)}catch(a){n.alertDanger("Exception",a.message),l.val(l.attr("defaultValue"))}}),i.append(l),i.addClass("edit")}else i.html(o);"d_mlg"==e.name?.15>=o&&o>0&&i.addClass("danger"):"cas"==e.name&&o>0&&o!=n.rally.rallySpeed()&&i.addClass("warning"),r.append(i),n.columnState[e.name]||i.hide()}),r.on("click",function(e){n.isSelected(t.instr)||n.selectInstruction(t.instr,{row:t.instr,col:$(e.target).attr("data-col")})}),r.on("focus",function(e){n.isSelected(t.instr)||n.selectInstruction(t.instr)}),r.on("dblclick",function(e){n.editState||n.editMode(!0,{row:t.instr,col:$(e.target).attr("data-col")})}),r.on("keydown",function(e){n.handleKeyDownRow(e,t)});var i=e.children("tr[data-row='"+t.instr+"']");i.length>0?(r.insertBefore(i),i.remove()):e.append(r),n.isSelected(t.instr)&&(r.addClass("active"),n.editState?r.children("td[data-col="+n.selected.col+"]").children("input").focus().select():r.focus())}},handleKeyDownInput:function(t,e){var n,r,i=this,a=$(t.target),o=Number.parseFloat(a.closest("td").attr("data-col")),l=!0;if(!i.modalActive){switch(t.keyCode){case 33:for(n=e,r=5;r>0;r--)n.prev&&(n=n.prev);n!=e&&(a.trigger("blur"),i.selectInstruction(n.instr,{row:n.instr,col:o}));break;case 34:for(n=e,r=5;r>0;r--)n.next&&(n=n.next);n!=e&&(a.trigger("blur"),i.selectInstruction(n.instr,{row:n.instr,col:o}));break;case 38:e.prev&&(a.trigger("blur"),i.selectInstruction(e.prev.instr,{row:e.prev.instr,col:o}));break;case 13:case 40:var s=e.next;a.trigger("blur"),s?i.selectInstruction(e.next.instr,{row:e.next.instr,col:o}):i.rally.addNextInstruction().then(function(t){i.selectInstruction(t,{row:t,col:o})});break;case 27:i.editMode(!1);break;case 46:t.shiftKey?(e.next?i.selectInstruction(e.next.instr,{row:e.next.instr,col:o}):e.prev&&i.selectInstruction(e.prev.instr,{row:e.prev.instr,col:o}),i.rally.deleteInstruction(e.id)):l=!1;break;default:l=!1}l&&(t.stopPropagation(),t.preventDefault())}},handleKeyDownRow:function(t,e){var n,r,i=this,a=!0;if(!i.modalActive){switch(t.keyCode){case 33:for(n=e,r=5;r>0;r--)n.prev&&(n=n.prev);n!=e&&i.selectInstruction(n.instr,{row:n.instr,col:index});break;case 34:for(n=e,r=5;r>0;r--)n.next&&(n=n.next);n!=e&&i.selectInstruction(n.instr,{row:n.instr,col:index});break;case 38:e.prev&&i.selectInstruction(e.prev.instr);break;case 40:e.next;e.next&&i.selectInstruction(e.next.instr);break;default:a=!1}a&&(t.stopPropagation(),t.preventDefault())}},handleKeyDownGlobal:function(t,e){var n=this,r=!1;if(!n.modalActive){try{switch(t.keyCode){case 113:n.editMode(!n.editState);break;case 76:n.timerLap();break;case 67:t.shiftKey&&n.timerResetLaps();break;case 109:n.insertInstruction(t.shiftKey?-1:-.5);break;case 107:n.insertInstruction(t.shiftKey?1:.5);break;default:r=!1}}catch(i){n.alertException(i)}r&&(t.stopPropagation(),t.preventDefault())}},findRow:function(t){return $("tr[data-row='"+t+"']")},findCell:function(t,e){return $("tr[data-row='"+t+"']").children("td[data-col='"+e+"']")},isSelected:function(t){return null!==this.selected&&this.selected.row==t},selectInstruction:function(t,e){$("tr.active").removeClass("active");var n=this.selected;if(t=Number.parseFloat(t),isNaN(t)&&(t=null),e&&(e.row=Number.parseFloat(e.row),e.col=Number.parseInt(e.col)),null!==n){var r=$("tr[data-row='"+n.row+"']");r.find("input").trigger("blur")}if(null!==t){e?this.selected=e:this.selected={row:t,col:0},this.renderInstruction(this.rally.instruction(t)),null!==n&&this.renderInstruction(this.rally.instruction(n.row));var i=$("tr[data-row='"+t+"']");if(this.editState&&e){var a=this.findCell(e.row,e.col),o=a.find("input");o.focus(),o.select()}i.addClass("active")}},editMode:function(t,e){if("undefined"!=typeof t&&(this.editState=t),null!==this.selected&&(this.renderInstruction(this.rally.instruction(this.selected.row)),this.editState&&e)){var n=(this.findRow(e.row),this.findCell(e.row,e.col)),r=n.find("input");r.focus(),r.select()}var i=$("#edit-instruction");t?i.addClass("active"):i.removeClass("active")},editBox:function(t,e){var n=this;return t=$(t),e=e.bind(n.rally),t.on("blur",function(r){e(t.val()),n.renderInstructions()}),t.val(e()),t},editCheckbox:function(t,e){var n=this;return t=$(t),e=e.bind(n.rally),t.on("change",function(r){e(t.is(":checked")),n.renderInstructions()}),t.prop("checked",e()),t},createTimer:function(){var t=this,e=$("body"),n=$("#timer-panel");this.timerBody=$("#timer-value"),n.css("position","fixed"),t.ensureTimerVisible(),n.draggable({handle:".move-grip",containment:e,scroll:!1,delay:100,stop:function(e,n){t.timerPosition(n.position)}});var r=null;n.on("mousedown",function(){r=setTimeout(function(){n.addClass("ui-draggable-dragging")},100)}),n.on("mouseup",function(){n.removeClass("ui-draggable-dragging"),clearTimeout(r)}),this.setTimerInterval(100),this.laps=$("#timer-laps"),$("#timer-lap").on("click",function(){t.timerLap()}),$("#timer-clear").on("click",function(){t.timerResetLaps()}),"true"==t.rally.getConfig("timer_visible")&&(n.addClass("in"),$("#toggle-timer").addClass("active"))},setTimerInterval:function(t){this.timerInterval&&clearInterval(this.timerInterval),t>0&&(this.timerInterval=setInterval(this.updateTimer.bind(this),t))},updateTimer:function(){if(this.timerBody){var t=this.timerBody.text(),e=this.formatTimer(this.rally.now());t!=e&&this.timerBody.text(e)}},timerPosition:function(t){arguments.length>0&&this.rally.setConfig("timer_position",JSON.stringify(t));try{t=JSON.parse(this.rally.getConfig("timer_position"))}catch(e){if("SyntaxError"!=e.name)throw e;t=null}return null===t&&(t={top:0,left:0}),t},updateTimeFormats:function(){if(this.rally.timeSeconds())this.formatTimer=function(t){return moment(t).format("HH:mm:ss.S")},this.formatAbsTime=function(t){return moment(t).format("HH:mm:ss")},this.formatRelTime=function(t){return t>0?moment(1e3*t).format("m:ss"):"0:00"};else{var t=function(t,e){var n=moment(t),r=parseFloat(moment.duration({seconds:n.second(),milliseconds:n.milliseconds()}).asMinutes()),i=n.format(e)+String(r.toFixed(3)).substr(1);return i};this.formatTimer=function(e){return t(e,"HH:mm")},this.formatAbsTime=function(e){return t(e,"HH:mm")},this.formatRelTime=function(e){return e>0?t(1e3*e,"m"):"0:00"}}},timerLap:function(){this.laps.append($("<li />").text(this.formatTimer(this.rally.now())))},timerResetLaps:function(){this.laps.children().remove()},ensureTimerVisible:function(){var t=this,e=$("body"),n=$("#timer-panel"),r=t.timerPosition();r.left+n.width()>e.width()&&(r.left=e.width()-n.width()),r.top+n.height()>e.height()&&(r.top=e.height()-n.height()),t.timerPosition(r),n.css(r)},toggleTimer:function(){var t=$("#toggle-timer"),e=$("#timer-panel"),n=this,r=!e.hasClass("in");r?(n.ensureTimerVisible(),t.addClass("active"),n.setTimerInterval(100),e.addClass("in")):(t.removeClass("active"),n.setTimerInterval(0),e.removeClass("in")),n.rally.setConfig("timer_visible",JSON.stringify(r))},alertDanger:function(t,e){var n=this,r=$("#alert"),i=r.find(".modal-header");i.addClass("alert-danger"),r.find(".modal-title").text(t),r.find(".modal-body").text(e),r.on("hidden.bs.modal",function(t){i.removeClass("alert-danger"),r.unbind("hidden.bs.modal"),n.modalActive=!1}),n.modalActive=!0,r.modal()},alertException:function(t){this.alertDanger("Exception",t.message)},insertInstruction:function(t){var e=this;if(e.selected){var n=e.rally.instruction(e.selected.row);e.rally.addInstruction(n.instr.value+t).then(function(t){e.selectInstruction(t)})}}}}(),function(){window.Rally=function(){this.init(),this.ui=new RallyUI(this)},Rally.prototype={instructions:[],instruction_map:new Map,instruction_id_map:new Map,last_instr:null,init:function(){var t=this.db=new Dexie("MyDatabase");t.version(1).stores({instructions:["id++","&instr","raw_mlg","cas","delay","mlg","time","notes"].join()}),t.open()["catch"](function(t){alert("Uh oh : "+t)}),this.last_instr=0,this.calculate(),this.cachedClockAdj=this.clockAdj()},cachedClockAdj:0,now:function(){return Date.now()+this.cachedClockAdj},calculate:function(){var t=this,e=null;return this.instruction_map.clear(),this.instruction_id_map.clear(),this.db.instructions.toArray(function(n){t.instructions=n.sort(function(t,e){return t.instr-e.instr}).map(function(n){var r=new RallyInstruction(n);return r.calculate(t,e),t.instruction_map.set(parseFloat(r.instr),r),t.instruction_id_map.set(r.id,r),t.last_instr=r.instr.value,r.prev=e,e&&(e.next=r),e=r,r}),t.ui.renderInstructions()})},instruction:function(t){return t=parseFloat(t),this.instruction_map.has(t)?this.instruction_map.get(t):null},addInstruction:function(){var t={};if(t.instr=Number.parseFloat(arguments[0]),this.instruction_map.has(t.instr))throw new Error("Instruction numbers must be unique");switch(t.raw_mlg=null,t.cas=null,t.delay=null,t.mlg=null,t.time=null,arguments.length){case 6:t.time=Number.parseInt(arguments[5]);case 5:t.mlg=Number.parseFloat(arguments[4]);case 4:t.delay=Number.parseFloat(arguments[3]);case 3:t.cas=Number.parseInt(arguments[2]);case 2:t.raw_mlg=Number.parseFloat(arguments[1])}var e=this;return this.db.instructions.put(t).then(function(){return e.calculate().then(function(){return t.instr})})},addNextInstruction:function(){return this.last_instr=Math.floor(this.last_instr+1),this.addInstruction(this.last_instr)},setValue:function(t,e,n){var r=this,i={};"instr"==e.name?n=r.parseInstruction(e.format_cb(n)):"tod"==e.name?n=r.parseTime(n):e.format_cb&&(n=e.format_cb(n)),i[e.name]=n,this.db.instructions.update(t.id,i).then(function(){r.calculate()})["catch"](function(t){console.log(instr),console.log(i)})},deleteInstruction:function(t){var e=this;t&&this.last_instr==t.instr.value&&(t.prev?this.last_instr=t.prev.instr.value:this.last_instr=0),e.db.instructions.where("id").equals(t.id)["delete"]().then(function(){e.calculate()})},odomFactor:function(t){return arguments.length>0&&this.setConfig("odom_factor",t),t=this.getConfig("odom_factor"),null===t&&(t=1),Number.parseFloat(t)},casFactor:function(t){return arguments.length>0&&this.setConfig("cas_factor",t),t=this.getConfig("cas_factor"),null===t&&(t=1),Number.parseFloat(t)},rallySpeed:function(t){return arguments.length>0&&this.setConfig("rally_speed",t),t=this.getConfig("rally_speed"),null===t&&(t=1),Number.parseInt(t)},clockAdj:function(t){return arguments.length>0&&(this.setConfig("clock_adj",t),this.cachedClockAdj=this.clockAdj()),t=this.getConfig("clock_adj"),null===t&&(t=0),Number.parseInt(t)},timeSeconds:function(t){return arguments.length>0&&this.setConfig("time_seconds",Boolean(t)),t=this.getConfig("time_seconds"),t=null===t?!0:"true"==t.toLowerCase(),Boolean(t)},adjustMilleage:function(t){return Number.parseFloat(t)*this.odomFactor()},adjustCAS:function(t){return Number.parseFloat(t)*this.casFactor()},getConfig:function(t){return window.localStorage.getItem(t)},setConfig:function(t,e){return window.localStorage.setItem(t,e)},reset:function(){this.db["delete"](),this.init()},parseInstruction:function(t){if(null===t||isNaN(t))throw new Error("Invalid format for instruction");if(this.instruction_map.has(t))throw new Error("Instruction numbers must be unique");return t},parseTime:function(t){var e=null;if(null!==t){if(!t.match(/^\s*[0-9:.]+(\s*[pamPAM]+)?\s*$/))throw new Error("Invalid time format");if(this.timeSeconds())e=moment(t,["h-m-s","h-m","H-m A"]);else if("string"==typeof t&&t.includes(".")){var n=null;if(n=t.match(/^\s*(([0-9]+):)?([0-9]+)\.([0-9]+)(\s*[pamPAM]+)?\s*$/),!n)throw new Error("Invalid time format");e=moment({h:n[2],m:n[3]}),e.add(60*Number.parseFloat("0."+n[4]),"seconds")}else e=moment(t,["h-m-s","h-m","H-m A"]);e=e.isValid()?e.valueOf():null}return e}},window.RallyInstruction=function(t){this.id=t.id,this.columns=[],this.columns_calc_order=[];var e=this;this.column_defs_display_order.forEach(function(n){var r=null;t.hasOwnProperty(n.name)&&(r=t[n.name]);var i=new RallyInstructionColumn(r,n);e.columns.push(i),Object.defineProperty(e,i.name,{get:function(){return i}})}),this.column_defs_calc_order.forEach(function(t){e.columns_calc_order.push(e[t])})},RallyInstruction.prototype={column_defs_display_order:[],column_defs_by_name:{},column_defs_calc_order:[],parseFixedFloat:function(t){return function(e){var n=Number.parseFloat(e);return n=isNaN(n)?null:n.toFixed(t)}},parseFloat:function(t){var e=Number.parseFloat(t);return isNaN(e)&&(e=null),e},parseInt:function(t){var e=Number.parseInt(t);return isNaN(e)&&(e=null),e},calculate:function(t,e){var n=this;this.columns_calc_order.forEach(function(r){r.calc(t,e,n)})}},window.RallyInstructionColumn=function(t,e){this.name=e.name,this.label=e.label,this.default_value=e.default_value,this.format_cb=e.format_cb,this.calc_if_prev_cb=e.calc_if_prev_cb,this.calc_always_cb=e.calc_always_cb,this.read_only=!!e.read_only,this.calculated_value=t,this.stored_value=t,Object.defineProperty(this,"value",{get:function(){return null!==this.stored_value?this.stored_value:this.calculated_value}})},RallyInstructionColumn.prototype={calc:function(t,e,n){var r=null;r=this.isSet()?this.value:this.calc_always_cb?this.calc_always_cb.apply(this,arguments):e&&this.calc_if_prev_cb?this.calc_if_prev_cb.apply(this,arguments):this.default_value,this.calculated_value=r},isSet:function(){return null!==this.stored_value},toString:function(){var t=this.value;return this.format_cb&&(t=this.format_cb(t)),t}},RallyInstruction.prototype.column_defs_display_order=[{name:"instr",label:"Instr",format_cb:RallyInstruction.prototype.parseFixedFloat(1)},{name:"raw_mlg",label:"Raw Mlg",default_value:0,format_cb:RallyInstruction.prototype.parseFloat,calc_if_prev_cb:function(t,e,n){return n.mlg.isSet()&&!n.raw_mlg.isSet()?e.raw_mlg.value+(n.mlg.value-e.mlg.value):0}},{name:"raw_d_mlg",label:"Raw &Delta;Mlg",read_only:!0,default_value:0,format_cb:RallyInstruction.prototype.parseFloat,calc_if_prev_cb:function(t,e,n){var r=n.raw_mlg.value-e.raw_mlg.value;return 0>r?0:r}},{name:"mlg",label:"Mlg",default_value:0,format_cb:RallyInstruction.prototype.parseFloat,calc_if_prev_cb:function(t,e,n){return 0===n.raw_mlg.value?0:e.mlg.value+n.d_mlg.value}},{name:"d_mlg",label:"&Delta;Mlg",read_only:!0,default_value:0,format_cb:RallyInstruction.prototype.parseFloat,calc_always_cb:function(t,e,n){return t.adjustMilleage(n.raw_d_mlg.value)}},{name:"cas",label:"CAS",default_value:0,format_cb:RallyInstruction.prototype.parseInt,calc_if_prev_cb:function(t,e,n){return e.cas.value}},{name:"delay",label:"Delay",default_value:0,format_cb:RallyInstruction.prototype.parseFloat},{name:"tod",label:"TOD",format_cb:RallyInstruction.prototype.parseInt,calc_if_prev_cb:function(t,e,n){var r=e.tod.value;return r+=1e3*(n.d_time.value+e.err_time.value)}},{name:"time",label:"Time",default_value:0,read_only:!0,format_cb:RallyInstruction.prototype.parseInt,calc_if_prev_cb:function(t,e,n){return e.time.value+n.d_time.value}},{name:"d_time",label:"&Delta;Time",default_value:0,read_only:!0,format_cb:RallyInstruction.prototype.parseFloat,calc_if_prev_cb:function(t,e,n){var r=3600*n.raw_d_mlg.value;return r/=e.cas.value,r+=n.delay}},{name:"err_time",label:"Err Time",default_value:0,read_only:!0,format_cb:RallyInstruction.prototype.parseFloat,calc_if_prev_cb:function(t,e,n){var r=0;return n.tod.isSet()&&(r=e.tod.value-n.tod.value,r/=1e3,r+=n.d_time.value+e.err_time.value),r}},{name:"notes",label:"Notes"}],RallyInstruction.prototype.column_defs_display_order.forEach(function(t){RallyInstruction.prototype.column_defs_by_name[t.name]=t}),RallyInstruction.prototype.column_defs_calc_order=["instr","raw_d_mlg","d_mlg","mlg","cas","d_time","time","tod","raw_mlg","err_time"]}();
+'use strict';
+
+(function () {
+    'use strict';
+
+    window.RallyUI = function (rally) {
+        this.rally = rally;
+        var ui = this;
+
+        $('#add-instruction').on('click', function (e) {
+            ui.rally.addNextInstruction().then(function (row) {
+                ui.selectInstruction(row);
+            });
+        });
+
+        $('#edit-instruction').on('click', function (e) {
+            ui.editMode(!ui.editState);
+        });
+
+        $('#reset-instructions').on('click', function (e) {
+            ui.rally.reset();
+        });
+
+        $('#toggle-timer').on('click', function (e) {
+            ui.toggleTimer();
+        });
+
+        $('#hideshow div.panel-heading').on('click', function (e) {
+            $('#hideshow ul').collapse('toggle');
+        });
+
+        $(document).on('keydown', function (e) {
+            ui.handleKeyDownGlobal(e);
+        });
+
+        this.editBox('#edit-rally-speed', rally.rallySpeed);
+        this.editBox('#edit-odom-factor', rally.odomFactor);
+        this.editBox('#edit-clock-adj', rally.clockAdj).on('focus', function (e) {
+            ui.setTimerInterval(10);
+        }).on('blur', function (e) {
+            ui.setTimerInterval(100);
+        });
+        this.editCheckbox('#edit-time-seconds', rally.timeSeconds).on('change', function () {
+            ui.updateTimeFormats();
+            ui.renderInstructions();
+        });
+
+        ui.updateTimeFormats();
+
+        ui.createTimer();
+
+        ui.editMode(false);
+
+        ui.renderInstructionsHeader();
+
+        ui.showColumn();
+    };
+
+    RallyUI.prototype = {
+        checkVal: function checkVal(val) {
+            if (typeof val == 'undefined' || val === null) {
+                return 'ERR';
+            }
+            return val;
+        },
+
+        editState: false,
+
+        selected: null,
+
+        columnState: {},
+
+        timerBody: null,
+
+        timerInterval: null,
+
+        laps: null,
+
+        modalActive: false,
+
+        menu_hidden_columns: {},
+
+        showColumn: function showColumn(name, show) {
+            var ui = this;
+            var setVisible = function setVisible(name, show) {
+                if (show) {
+                    $('th[data-col=\'' + name + '\']').show();
+                    $('td[data-col=\'' + name + '\']').show();
+                } else {
+                    $('th[data-col=\'' + name + '\']').hide();
+                    $('td[data-col=\'' + name + '\']').hide();
+                }
+                $('label[data-col=\'' + name + '\'] input').prop('checked', show);
+                ui.menu_hidden_columns[name].visible = !show;
+            };
+            if (name) {
+                if (name == 'instr') {
+                    return;
+                }
+                setVisible(name, show);
+                ui.columnState[name] = show;
+                ui.rally.setConfig('column_state', JSON.stringify(this.columnState));
+            } else {
+                var columnState = ui.rally.getConfig('column_state');
+                try {
+                    columnState = JSON.parse(columnState);
+                } catch (e) {/* do nothing */}
+                if (!columnState) {
+                    columnState = {
+                        'raw_mlg': false,
+                        'raw_d_mlg': false,
+                        'time': false
+                    };
+                }
+                RallyInstruction.prototype.column_defs_display_order.forEach(function (def) {
+                    if (!columnState.hasOwnProperty(def.name)) {
+                        columnState[def.name] = true;
+                    }
+                    setVisible(def.name, columnState[def.name]);
+                });
+                ui.columnState = columnState;
+            }
+
+            // Force table layout to update
+            $('#instructions').trigger("resize");
+        },
+
+        renderInstructionsHeader: function renderInstructionsHeader() {
+            var table = $('#instructions');
+            var thead = table.children('thead');
+            var hideshow_body = $('#hideshow div.panel-body');
+            var ui = this;
+
+            thead.children().remove();
+            var hideshow = $('#hideshow ul');
+            hideshow.children().remove();
+
+            var tr = $('<tr />');
+            RallyInstruction.prototype.column_defs_display_order.forEach(function (col) {
+                var th = $('<th />').attr('data-col', col.name);
+                th.addClass('instruction-column');
+                th.html(col.label);
+                if (col.description) {
+                    th.attr('title', col.description);
+                }
+
+                th.on('dblclick', function (e) {
+                    ui.showColumn(col.name, false);
+                });
+                tr.append(th);
+
+                var input = $('<input type=checkbox checked/>');
+                input.on('change', function (e) {
+                    ui.showColumn(col.name, e.target.checked);
+                });
+
+                var label = ' <span class="col_label">' + col.label + '</span>';
+                if (col.description) {
+                    label += ': <span class="col_description">' + col.description + '</span>';
+                }
+                hideshow.append($('<label class="list-group-item" />').attr('data-col', col.name).append(input).append(label));
+
+                ui.columnState[col.name] = true;
+
+                ui.menu_hidden_columns[col.name] = {
+                    name: col.label
+                };
+            });
+
+            thead.append(tr);
+
+            $.contextMenu({
+                selector: '.instruction-column',
+                callback: function callback(key, opt) {
+                    console.log(key);
+                    console.log(opt);
+                    var name = key;
+                    ui.showColumn(name, true);
+                    return true;
+                },
+                build: function build() {
+                    var items = {
+                        hide: {
+                            name: 'Hide',
+                            callback: function callback(key, opt) {
+                                var name = this.attr('data-col');
+                                ui.showColumn(name, false);
+                                return true;
+                            }
+                        },
+                        show: {
+                            name: 'Show',
+                            items: ui.menu_hidden_columns
+                        }
+                    };
+                    return { items: items };
+                }
+            });
+
+            var instrFromRow = function instrFromRow(element) {
+                return Number.parseFloat(element.attr('data-row'));
+            };
+
+            $.contextMenu({
+                selector: 'tr td',
+                items: {
+                    insert_before: {
+                        name: 'Insert before',
+                        callback: function callback(key, opt) {
+                            ui.insertInstruction(-0.5);
+                            return true;
+                        }
+                    },
+                    insert_after: {
+                        name: 'Insert after',
+                        callback: function callback(key, opt) {
+                            ui.insertInstruction(0.5);
+                            return true;
+                        }
+                    },
+
+                    separator1: { "type": "cm_seperator" },
+
+                    delete: {
+                        name: 'Delete',
+                        callback: function callback(key, opt) {
+                            var tr = this.closest('tr');
+                            var instr = instrFromRow(tr);
+                            ui.rally.deleteInstruction(ui.rally.instruction(instr));
+                            return true;
+                        }
+                    }
+                }
+            });
+
+            // Must be after contextMenu to prevent buggy item callbacks
+            table.floatThead();
+        },
+
+        renderInstructions: function renderInstructions() {
+            var tbody = $('#instructions').children('tbody');
+            tbody.children().remove();
+            var ui = this;
+            ui.rally.instructions.forEach(function (instr) {
+                ui.renderInstruction(instr);
+            });
+            $('#instructions').trigger("resize");
+        },
+
+        renderInstruction: function renderInstruction(instr) {
+            if (instr === null) {
+                return;
+            }
+            var tbody = $('#instructions').children('tbody');
+            var ui = this;
+            var tr = $('<tr />').attr('data-row', instr.instr).attr('tabindex', 0);
+
+            instr.columns.forEach(function (col) {
+                var td = $('<td />').attr('data-col', col.name);
+                var calculated = !col.isSet();
+                if (!calculated) {
+                    td.addClass('notcalc');
+                }
+                var pretty_val = col.value;
+                if (col.name == 'delay' || col.name == 'err_time') {
+                    if (pretty_val === 0) {
+                        pretty_val = '';
+                    }
+                } else if (col.name == 'notes') {
+                    td.removeClass('notcalc');
+                } else if (typeof pretty_val == 'number') {
+                    if (col.name == 'instr') {
+                        pretty_val = pretty_val.toFixed(1);
+                    } else if (col.name == 'tod') {
+                        pretty_val = ui.formatAbsTime(pretty_val);
+                    } else if (col.name == 'd_time') {
+                        pretty_val = ui.formatRelTime(pretty_val);
+                    } else if (col.name != 'cas') {
+                        pretty_val = pretty_val.toFixed(3);
+                    }
+                }
+                if (ui.editState && ui.isSelected(instr.instr) && !col.read_only) {
+                    var input = $('<input />');
+                    input.attr('type', 'text');
+                    input.attr('size', 5);
+                    if (calculated) {
+                        input.attr('placeholder', pretty_val);
+                        input.attr('defaultValue', '');
+                    } else {
+                        input.val(pretty_val);
+                        input.attr('defaultValue', pretty_val);
+                    }
+                    input.on('keydown', function (e) {
+                        ui.handleKeyDownInput(e, instr);
+                    });
+                    input.on('blur', function (e) {
+                        var val = null;
+                        if (input.val().length > 0) {
+                            val = input.val();
+                        }
+                        if (val != col.stored_value) {
+                            try {
+                                ui.rally.setValue(instr, col, val);
+                            } catch (err) {
+                                ui.alertDanger('Exception', err.message);
+                                input.val(input.attr('defaultValue'));
+                            }
+                        }
+                    });
+                    td.append(input);
+                    td.addClass('edit');
+                } else {
+                    td.html(pretty_val);
+                }
+                if (col.name == 'd_mlg') {
+                    if (pretty_val <= 0.15 && pretty_val > 0) {
+                        td.addClass('danger');
+                    }
+                } else if (col.name == 'cas') {
+                    if (pretty_val > 0 && pretty_val != ui.rally.rallySpeed()) {
+                        td.addClass('warning');
+                    }
+                }
+                tr.append(td);
+
+                if (!ui.columnState[col.name]) td.hide();
+            });
+
+            tr.on('click', function (e) {
+                if (!ui.isSelected(instr.instr)) {
+                    ui.selectInstruction(instr.instr, { row: instr.instr, col: $(e.target).attr('data-col') });
+                }
+            });
+
+            tr.on('focus', function (e) {
+                if (!ui.isSelected(instr.instr)) {
+                    ui.selectInstruction(instr.instr);
+                }
+            });
+
+            tr.on('dblclick', function (e) {
+                if (!ui.editState) {
+                    ui.editMode(true, { row: instr.instr, col: $(e.target).attr('data-col') });
+                }
+            });
+
+            tr.on('keydown', function (e) {
+                ui.handleKeyDownRow(e, instr);
+            });
+
+            var old_tr = tbody.children('tr[data-row=\'' + instr.instr + '\']');
+            if (old_tr.length > 0) {
+                tr.insertBefore(old_tr);
+                old_tr.remove();
+            } else {
+                tbody.append(tr);
+            }
+
+            if (ui.isSelected(instr.instr)) {
+                tr.addClass('active');
+                if (ui.editState) {
+                    tr.children('td[data-col=' + ui.selected.col + ']').children('input').focus().select();
+                } else {
+                    tr.focus();
+                }
+            }
+        },
+
+        handleKeyDownInput: function handleKeyDownInput(e, instr) {
+            var i;
+            var count;
+            var ui = this;
+            var input = $(e.target);
+            var index = input.closest('td').attr('data-col');
+            var handled = true;
+            if (ui.modalActive) {
+                return;
+            }
+            switch (e.keyCode) {
+                case 33:
+                    // page up
+                    i = instr;
+                    for (count = 5; count > 0; count--) {
+                        if (i.prev) {
+                            i = i.prev;
+                        }
+                    }
+                    if (i != instr) {
+                        input.trigger('blur');
+                        ui.selectInstruction(i.instr, { row: i.instr, col: index });
+                    }
+                    break;
+                case 34:
+                    // page down
+                    i = instr;
+                    for (count = 5; count > 0; count--) {
+                        if (i.next) {
+                            i = i.next;
+                        }
+                    }
+                    if (i != instr) {
+                        input.trigger('blur');
+                        ui.selectInstruction(i.instr, { row: i.instr, col: index });
+                    }
+                    break;
+                case 38:
+                    // up
+                    if (instr.prev) {
+                        input.trigger('blur');
+                        ui.selectInstruction(instr.prev.instr, { row: instr.prev.instr, col: index });
+                    }
+                    break;
+                case 13: // enter
+                case 40:
+                    // down
+                    var next = instr.next;
+                    input.trigger('blur');
+                    if (next) {
+                        ui.selectInstruction(instr.next.instr, { row: instr.next.instr, col: index });
+                    } else {
+                        ui.rally.addNextInstruction().then(function (row) {
+                            ui.selectInstruction(row, { row: row, col: index });
+                        });
+                    }
+                    break;
+                case 27:
+                    // escape
+                    ui.editMode(false);
+                    break;
+                case 46:
+                    // delete
+                    if (e.shiftKey) {
+                        if (instr.next) {
+                            ui.selectInstruction(instr.next.instr, { row: instr.next.instr, col: index });
+                        } else if (instr.prev) {
+                            ui.selectInstruction(instr.prev.instr, { row: instr.prev.instr, col: index });
+                        }
+                        ui.rally.deleteInstruction(instr.id);
+                    } else {
+                        handled = false;
+                    }
+                    break;
+                default:
+                    handled = false;
+                    break;
+            }
+            if (handled) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+        },
+
+        handleKeyDownRow: function handleKeyDownRow(e, instr) {
+            var i;
+            var count;
+            var ui = this;
+            var handled = true;
+            if (ui.modalActive) {
+                return;
+            }
+            switch (e.keyCode) {
+                case 33:
+                    // page up
+                    i = instr;
+                    for (count = 5; count > 0; count--) {
+                        if (i.prev) {
+                            i = i.prev;
+                        }
+                    }
+                    if (i != instr) {
+                        ui.selectInstruction(i.instr, { row: i.instr, col: index });
+                    }
+                    break;
+                case 34:
+                    // page down
+                    i = instr;
+                    for (count = 5; count > 0; count--) {
+                        if (i.next) {
+                            i = i.next;
+                        }
+                    }
+                    if (i != instr) {
+                        ui.selectInstruction(i.instr, { row: i.instr, col: index });
+                    }
+                    break;
+                case 38:
+                    // up
+                    if (instr.prev) {
+                        ui.selectInstruction(instr.prev.instr);
+                    }
+                    break;
+                case 40:
+                    // down
+                    var next = instr.next;
+                    if (instr.next) {
+                        ui.selectInstruction(instr.next.instr);
+                    }
+                    break;
+                default:
+                    handled = false;
+                    break;
+            }
+            if (handled) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+        },
+
+        handleKeyDownGlobal: function handleKeyDownGlobal(e, instr) {
+            var ui = this;
+            var handled = false;
+            if (ui.modalActive) {
+                return;
+            }
+            try {
+                switch (e.keyCode) {
+                    case 113:
+                        // f2
+                        ui.editMode(!ui.editState);
+                        break;
+                    case 76:
+                        // L
+                        ui.timerLap();
+                        break;
+                    case 67:
+                        // C
+                        if (e.shiftKey) {
+                            ui.timerResetLaps();
+                        }
+                        break;
+                    case 109:
+                        // KP_MINUS
+                        ui.insertInstruction(e.shiftKey ? -1 : -0.5);
+                        break;
+                    case 107:
+                        // KP_PLUS
+                        ui.insertInstruction(e.shiftKey ? 1 : 0.5);
+                        break;
+                    default:
+                        handled = false;
+                        break;
+                }
+            } catch (err) {
+                ui.alertException(err);
+            }
+            if (handled) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+        },
+
+        findRow: function findRow(instr) {
+            return $('tr[data-row=\'' + instr + '\']');
+        },
+
+        findCell: function findCell(instr, column) {
+            return $('tr[data-row=\'' + instr + '\']').children('td[data-col=\'' + column + '\']');
+        },
+
+        isSelected: function isSelected(instr) {
+            return this.selected !== null && this.selected.row == instr;
+        },
+
+        selectInstruction: function selectInstruction(instr, target) {
+            $('tr.active').removeClass('active');
+            var old_selected = this.selected;
+            instr = Number.parseFloat(instr);
+            if (isNaN(instr)) {
+                instr = null;
+            }
+            if (target) {
+                target.row = Number.parseFloat(target.row);
+                target.col = target.col || null;
+            }
+            if (old_selected !== null) {
+                var old_tr = $('tr[data-row=\'' + old_selected.row + '\']');
+                old_tr.find('input').trigger('blur');
+            }
+            if (instr !== null) {
+                if (target) {
+                    this.selected = target;
+                } else {
+                    this.selected = { row: instr, col: 0 };
+                }
+                this.renderInstruction(this.rally.instruction(instr));
+                if (old_selected !== null) {
+                    this.renderInstruction(this.rally.instruction(old_selected.row));
+                }
+                var tr = $('tr[data-row=\'' + instr + '\']');
+                if (this.editState && target) {
+                    var td = this.findCell(target.row, target.col);
+                    var input = td.find('input');
+                    input.focus();
+                    input.select();
+                }
+                tr.addClass('active');
+            }
+        },
+
+        editMode: function editMode(state, target) {
+            if (typeof state != 'undefined') {
+                this.editState = state;
+            }
+            if (this.selected !== null) {
+                this.renderInstruction(this.rally.instruction(this.selected.row));
+                if (this.editState && target) {
+                    var tr = this.findRow(target.row);
+                    var td = this.findCell(target.row, target.col);
+                    var input = td.find('input');
+                    input.focus();
+                    input.select();
+                }
+            }
+            var editButton = $('#edit-instruction');
+            if (state) {
+                editButton.addClass('active');
+            } else {
+                editButton.removeClass('active');
+            }
+        },
+
+        editBox: function editBox(input, prop) {
+            var ui = this;
+            input = $(input);
+            prop = prop.bind(ui.rally);
+            input.on('blur', function (e) {
+                prop(input.val());
+                ui.renderInstructions();
+            });
+            input.val(prop());
+            return input;
+        },
+
+        editCheckbox: function editCheckbox(input, prop) {
+            var ui = this;
+            input = $(input);
+            prop = prop.bind(ui.rally);
+            input.on('change', function (e) {
+                prop(input.is(':checked'));
+                ui.renderInstructions();
+            });
+            input.prop('checked', prop());
+            return input;
+        },
+
+        createTimer: function createTimer() {
+            var ui = this;
+            var container = $('body');
+            var timerPanel = $('#timer-panel');
+            this.timerBody = $('#timer-value');
+            timerPanel.css('position', 'fixed');
+            ui.ensureTimerVisible();
+            timerPanel.draggable({
+                handle: '.move-grip',
+                containment: container,
+                scroll: false,
+                delay: 100,
+                stop: function stop(e, jquery_ui) {
+                    ui.timerPosition(jquery_ui.position);
+                }
+            });
+            var timer = null;
+            timerPanel.on('mousedown', function () {
+                timer = setTimeout(function () {
+                    timerPanel.addClass('ui-draggable-dragging');
+                }, 100);
+            });
+            timerPanel.on('mouseup', function () {
+                timerPanel.removeClass('ui-draggable-dragging');
+                clearTimeout(timer);
+            });
+            this.setTimerInterval(100);
+
+            this.laps = $('#timer-laps');
+            $('#timer-lap').on('click', function () {
+                ui.timerLap();
+            });
+            $('#timer-clear').on('click', function () {
+                ui.timerResetLaps();
+            });
+
+            if (ui.rally.getConfig('timer_visible') == 'true') {
+                timerPanel.show();
+                $('#toggle-timer').addClass('active');
+            } else {
+                timerPanel.hide();
+            }
+        },
+
+        setTimerInterval: function setTimerInterval(interval) {
+            if (this.timerInterval) {
+                clearInterval(this.timerInterval);
+            }
+            if (interval > 0) {
+                this.timerInterval = setInterval(this.updateTimer.bind(this), interval);
+            }
+        },
+
+        updateTimer: function updateTimer() {
+            if (this.timerBody) {
+                var old_val = this.timerBody.text();
+                var val = this.formatTimer(this.rally.now());
+                if (old_val != val) {
+                    this.timerBody.text(val);
+                }
+            }
+        },
+
+        timerPosition: function timerPosition(val) {
+            if (arguments.length > 0) {
+                this.rally.setConfig('timer_position', JSON.stringify(val));
+            }
+            try {
+                val = JSON.parse(this.rally.getConfig('timer_position'));
+            } catch (e) {
+                if (e.name == "SyntaxError") {
+                    val = null;
+                } else {
+                    throw e;
+                }
+            }
+            if (val === null) {
+                val = { top: 0, left: 0 };
+            }
+            return val;
+        },
+
+        updateTimeFormats: function updateTimeFormats() {
+            if (this.rally.timeSeconds()) {
+                this.formatTimer = function (val) {
+                    return moment(val).format('HH:mm:ss.S');
+                };
+                this.formatAbsTime = function (val) {
+                    return moment(val).format('HH:mm:ss');
+                };
+                this.formatRelTime = function (val) {
+                    return val > 0 ? moment(val * 1000).format('m:ss') : '0:00';
+                };
+            } else {
+                var tenths = function tenths(val, fmt) {
+                    var t = moment(val);
+                    var minutes = parseFloat(moment.duration({ seconds: t.second(), milliseconds: t.milliseconds() }).asMinutes());
+                    var new_val = t.format(fmt) + String(minutes.toFixed(3)).substr(1);
+                    return new_val;
+                };
+                this.formatTimer = function (val) {
+                    return tenths(val, 'HH:mm');
+                };
+                this.formatAbsTime = function (val) {
+                    return tenths(val, 'HH:mm');
+                };
+                this.formatRelTime = function (val) {
+                    return val > 0 ? tenths(val * 1000, 'm') : '0.000';
+                };
+            }
+        },
+
+        timerLap: function timerLap() {
+            var lap = this.rally.now();
+            this.laps.append($('<li />').text(this.formatTimer(lap)));
+            if (this.selected) {
+                var instr = this.rally.instruction(this.selected.row);
+                this.rally.setValue(instr, 'tod', this.formatAbsTime(lap));
+            }
+        },
+
+        timerResetLaps: function timerResetLaps() {
+            this.laps.children().remove();
+        },
+
+        ensureTimerVisible: function ensureTimerVisible() {
+            var ui = this;
+            var container = $('body');
+            var timerPanel = $('#timer-panel');
+            var position = ui.timerPosition();
+            if (position.left + timerPanel.width() > container.width()) {
+                position.left = container.width() - timerPanel.width();
+            }
+            if (position.top + timerPanel.height() > container.height()) {
+                position.top = container.height() - timerPanel.height();
+            }
+            ui.timerPosition(position);
+            timerPanel.css(position);
+        },
+
+        toggleTimer: function toggleTimer() {
+            var button = $('#toggle-timer');
+            var timerPanel = $('#timer-panel');
+            var ui = this;
+            var visible = timerPanel.is(':visible');
+            if (!visible) {
+                timerPanel.show();
+                ui.ensureTimerVisible();
+                button.addClass('active');
+                ui.setTimerInterval(100);
+            } else {
+                button.removeClass('active');
+                ui.setTimerInterval(0);
+                timerPanel.hide();
+            }
+            ui.rally.setConfig('timer_visible', JSON.stringify(!visible));
+        },
+
+        alertDanger: function alertDanger(title, message) {
+            var ui = this;
+            var dialog = $('#alert');
+            var header = dialog.find('.modal-header');
+            header.addClass('alert-danger');
+            dialog.find('.modal-title').text(title);
+            dialog.find('.modal-body').text(message);
+            dialog.on('hidden.bs.modal', function (e) {
+                header.removeClass('alert-danger');
+                dialog.unbind('hidden.bs.modal');
+                ui.modalActive = false;
+            });
+            ui.modalActive = true;
+            dialog.modal();
+        },
+
+        alertException: function alertException(e) {
+            this.alertDanger('Exception', e.message);
+        },
+
+        insertInstruction: function insertInstruction(relative) {
+            var ui = this;
+            if (ui.selected) {
+                var instruction = ui.rally.instruction(ui.selected.row);
+                ui.rally.addInstruction(instruction.instr.value + relative).then(function (instruction) {
+                    ui.selectInstruction(instruction);
+                });
+            }
+        }
+    };
+})();
+//# sourceMappingURL=rally_ui.js.map
+
+'use strict';
+
+(function () {
+    'use strict';
+
+    window.Rally = function () {
+        this.init();
+
+        this.ui = new RallyUI(this);
+    };
+
+    Rally.prototype = {
+        instructions: [],
+        instruction_map: new Map(),
+        instruction_id_map: new Map(),
+        last_instr: null,
+
+        init: function init() {
+            var db = this.db = new Dexie('MyDatabase');
+
+            // Define a schema
+            db.version(1).stores({
+                instructions: ['id++', '&instr', 'raw_mlg', 'cas', 'delay', 'mlg', 'time', 'notes'].join()
+            });
+
+            // Open the database
+            db.open().catch(function (error) {
+                alert('Uh oh : ' + error);
+            });
+
+            this.last_instr = 0;
+            this.calculate();
+
+            this.cachedClockAdj = this.clockAdj();
+        },
+
+        cachedClockAdj: 0,
+
+        now: function now() {
+            return Date.now() + this.cachedClockAdj * 1000.0;
+        },
+
+        calculate: function calculate() {
+            var rally = this;
+            var prev = null;
+            this.instruction_map.clear();
+            this.instruction_id_map.clear();
+            return this.db.instructions.toArray(function (rows) {
+                rally.instructions = rows.sort(function (a, b) {
+                    return a.instr - b.instr;
+                }).map(function (row) {
+                    var instruction = new RallyInstruction(row);
+                    instruction.calculate(rally, prev);
+                    rally.instruction_map.set(parseFloat(instruction.instr), instruction);
+                    rally.instruction_id_map.set(instruction.id, instruction);
+                    rally.last_instr = instruction.instr.value;
+                    instruction.prev = prev;
+                    if (prev) {
+                        prev.next = instruction;
+                    }
+                    prev = instruction;
+                    return instruction;
+                });
+                rally.ui.renderInstructions();
+            });
+        },
+
+        instruction: function instruction(instr) {
+            instr = parseFloat(instr);
+            if (this.instruction_map.has(instr)) {
+                return this.instruction_map.get(instr);
+            } else {
+                return null;
+            }
+        },
+
+        addInstruction: function addInstruction() {
+            var row = {};
+
+            row.instr = Number.parseFloat(arguments[0]);
+
+            if (this.instruction_map.has(row.instr)) {
+                throw new Error("Instruction numbers must be unique");
+            }
+
+            row.raw_mlg = null;
+            row.cas = null;
+            row.delay = null;
+            row.mlg = null;
+            row.time = null;
+
+            switch (arguments.length) {
+                case 6:
+                    row.time = Number.parseInt(arguments[5]);
+                /* falls through */
+                case 5:
+                    row.mlg = Number.parseFloat(arguments[4]);
+                /* falls through */
+                case 4:
+                    row.delay = Number.parseFloat(arguments[3]);
+                /* falls through */
+                case 3:
+                    row.cas = Number.parseInt(arguments[2]);
+                /* falls through */
+                case 2:
+                    row.raw_mlg = Number.parseFloat(arguments[1]);
+                    break;
+            }
+
+            var rally = this;
+            return this.db.instructions.put(row).then(function () {
+                return rally.calculate().then(function () {
+                    return row.instr;
+                });
+            });
+        },
+
+        addNextInstruction: function addNextInstruction() {
+            this.last_instr = Math.floor(this.last_instr + 1);
+            return this.addInstruction(this.last_instr);
+        },
+
+        setValue: function setValue(instruction, col, val) {
+            var rally = this;
+            var obj = {};
+            if (typeof col === 'string' || col instanceof String) {
+                col = instruction.columns.find(function (c) {
+                    return c.name == col;
+                });
+            }
+            if (col.name == 'instr') {
+                val = rally.parseInstruction(col.format_cb(val));
+            } else if (col.name == 'tod') {
+                val = rally.parseTime(val);
+            } else if (col.format_cb) {
+                val = col.format_cb(val);
+            }
+            obj[col.name] = val;
+
+            this.db.instructions.update(instruction.id, obj).then(function () {
+                rally.calculate();
+            }).catch(function (err) {
+                console.log(instr);
+                console.log(obj);
+            });
+        },
+
+        deleteInstruction: function deleteInstruction(instruction) {
+            var rally = this;
+            if (instruction && this.last_instr == instruction.instr.value) {
+                if (instruction.prev) {
+                    this.last_instr = instruction.prev.instr.value;
+                } else {
+                    this.last_instr = 0;
+                }
+            }
+            rally.db.instructions.where('id').equals(instruction.id).delete().then(function () {
+                rally.calculate();
+            });
+        },
+
+        odomFactor: function odomFactor(val) {
+            if (arguments.length > 0) {
+                this.setConfig('odom_factor', val);
+                this.calculate();
+            }
+            val = this.getConfig('odom_factor');
+            if (val === null) {
+                val = 1;
+            }
+            return Number.parseFloat(val);
+        },
+
+        casFactor: function casFactor(val) {
+            if (arguments.length > 0) {
+                this.setConfig('cas_factor', val);
+            }
+            val = this.getConfig('cas_factor');
+            if (val === null) {
+                val = 1;
+            }
+            return Number.parseFloat(val);
+        },
+
+        rallySpeed: function rallySpeed(val) {
+            if (arguments.length > 0) {
+                this.setConfig('rally_speed', val);
+            }
+            val = this.getConfig('rally_speed');
+            if (val === null) {
+                val = 1;
+            }
+            return Number.parseInt(val);
+        },
+
+        clockAdj: function clockAdj(val) {
+            if (arguments.length > 0) {
+                this.setConfig('clock_adj', val);
+                this.cachedClockAdj = this.clockAdj();
+            }
+            val = this.getConfig('clock_adj');
+            if (val === null) {
+                val = 0;
+            }
+            return Number.parseInt(val);
+        },
+
+        timeSeconds: function timeSeconds(val) {
+            if (arguments.length > 0) {
+                this.setConfig('time_seconds', Boolean(val));
+            }
+            val = this.getConfig('time_seconds');
+            if (val === null) {
+                val = true;
+            } else {
+                val = val.toLowerCase() == "true";
+            }
+            return Boolean(val);
+        },
+
+        adjustMilleage: function adjustMilleage(val) {
+            return Number.parseFloat(val) * this.odomFactor();
+        },
+
+        adjustCAS: function adjustCAS(val) {
+            return Number.parseFloat(val) * this.casFactor();
+        },
+
+        getConfig: function getConfig(name) {
+            return window.localStorage.getItem(name);
+        },
+
+        setConfig: function setConfig(name, value) {
+            return window.localStorage.setItem(name, value);
+        },
+
+        reset: function reset() {
+            this.db.delete();
+            this.init();
+        },
+
+        parseInstruction: function parseInstruction(v) {
+            if (v === null || isNaN(v)) {
+                throw new Error("Invalid format for instruction");
+            }
+            if (this.instruction_map.has(v)) {
+                throw new Error("Instruction numbers must be unique");
+            }
+            return v;
+        },
+
+        parseTime: function parseTime(v) {
+            var result = null;
+            if (v !== null) {
+                if (!v.match(/^\s*[0-9:.]+(\s*[pamPAM]+)?\s*$/)) {
+                    throw new Error("Invalid time format");
+                }
+                if (this.timeSeconds()) {
+                    result = moment(v, ["h-m-s", "h-m", "H-m A"]);
+                } else {
+                    if (typeof v == 'string' && v.includes('.')) {
+                        var m = null;
+                        m = v.match(/^\s*(([0-9]+):)?([0-9]+)\.([0-9]+)(\s*[pamPAM]+)?\s*$/);
+                        if (m) {
+                            result = moment({ h: m[2], m: m[3] });
+                            result.add(Number.parseFloat('0.' + m[4]) * 60, 'seconds');
+                        } else {
+                            throw new Error("Invalid time format");
+                        }
+                    } else {
+                        result = moment(v, ["h-m-s", "h-m", "H-m A"]);
+                    }
+                }
+                if (result.isValid()) {
+                    result = result.valueOf();
+                } else {
+                    result = null;
+                }
+            }
+            return result;
+        }
+
+    };
+
+    window.RallyInstruction = function (row) {
+        this.id = row.id;
+        this.columns = [];
+        this.columns_calc_order = [];
+
+        var instruction = this;
+        this.column_defs_display_order.forEach(function (def) {
+            var val = null;
+            if (row.hasOwnProperty(def.name)) {
+                val = row[def.name];
+            }
+            var col = new RallyInstructionColumn(val, def);
+            instruction.columns.push(col);
+            Object.defineProperty(instruction, col.name, {
+                get: function get() {
+                    return col;
+                }
+            });
+        });
+        this.column_defs_calc_order.forEach(function (name) {
+            instruction.columns_calc_order.push(instruction[name]);
+        });
+    };
+
+    RallyInstruction.prototype = {
+        column_defs_display_order: [],
+        column_defs_by_name: {},
+        column_defs_calc_order: [],
+
+        parseFixedFloat: function parseFixedFloat(f) {
+            return function (v) {
+                var result = Number.parseFloat(v);
+                if (isNaN(result)) {
+                    result = null;
+                } else {
+                    result = result.toFixed(f);
+                }
+                return result;
+            };
+        },
+
+        parseFloat: function parseFloat(v) {
+            var result = Number.parseFloat(v);
+            if (isNaN(result)) {
+                result = null;
+            }
+            return result;
+        },
+
+        parseInt: function parseInt(v) {
+            var result = Number.parseInt(v);
+            if (isNaN(result)) {
+                result = null;
+            }
+            return result;
+        },
+
+        calculate: function calculate(rally, prev) {
+            var cur = this;
+            this.columns_calc_order.forEach(function (c) {
+                c.calc(rally, prev, cur);
+            });
+        }
+    };
+
+    window.RallyInstructionColumn = function (value, props) {
+        this.name = props.name;
+        this.label = props.label;
+        this.default_value = props.default_value;
+        this.format_cb = props.format_cb;
+        this.calc_if_prev_cb = props.calc_if_prev_cb;
+        this.calc_always_cb = props.calc_always_cb;
+        this.read_only = props.read_only ? true : false;
+
+        this.calculated_value = value;
+        this.stored_value = value;
+
+        Object.defineProperty(this, 'value', {
+            get: function get() {
+                return this.stored_value !== null ? this.stored_value : this.calculated_value;
+            }
+        });
+    };
+
+    RallyInstructionColumn.prototype = {
+        calc: function calc(rally, prev, cur) {
+            var val = null;
+            if (this.isSet()) {
+                val = this.value;
+            } else if (this.calc_always_cb) {
+                val = this.calc_always_cb.apply(this, arguments);
+            } else if (prev && this.calc_if_prev_cb) {
+                val = this.calc_if_prev_cb.apply(this, arguments);
+            } else {
+                val = this.default_value;
+            }
+            this.calculated_value = val;
+        },
+
+        isSet: function isSet() {
+            return this.stored_value !== null;
+        },
+
+        toString: function toString() {
+            var value = this.value;
+            if (this.format_cb) {
+                value = this.format_cb(value);
+            }
+            return value;
+        }
+    };
+
+    RallyInstruction.prototype.column_defs_display_order = [{
+        name: 'instr',
+        label: 'NRI',
+        description: 'Number Route Instruction',
+        format_cb: RallyInstruction.prototype.parseFixedFloat(1)
+    }, {
+        name: 'raw_mlg',
+        label: 'Raw Mlg',
+        description: 'Unmodified overall milleage from rally instructions',
+        default_value: 0,
+        format_cb: RallyInstruction.prototype.parseFloat,
+        calc_if_prev_cb: function calc_if_prev_cb(rally, prev, cur) {
+            if (cur.mlg.isSet() && !cur.raw_mlg.isSet()) {
+                return prev.raw_mlg.value + (cur.mlg.value - prev.mlg.value);
+            } else {
+                return 0;
+            }
+        }
+    }, {
+        name: 'raw_d_mlg',
+        label: 'Raw &Delta;Mlg',
+        description: 'Unmodified delta milleage between NRIs',
+        read_only: true,
+        default_value: 0,
+        format_cb: RallyInstruction.prototype.parseFloat,
+        calc_if_prev_cb: function calc_if_prev_cb(rally, prev, cur) {
+            var result = cur.raw_mlg.value - prev.raw_mlg.value;
+            return result < 0 ? 0 : result;
+        }
+    }, {
+        name: 'mlg',
+        label: 'Mlg',
+        description: 'Adjusted overall milleage: Defaults to calculated, can be overriden as needed',
+        default_value: 0,
+        format_cb: RallyInstruction.prototype.parseFloat,
+        calc_if_prev_cb: function calc_if_prev_cb(rally, prev, cur) {
+            if (cur.raw_mlg.value === 0) {
+                return 0;
+            } else {
+                return prev.mlg.value + cur.d_mlg.value;
+            }
+        }
+    }, {
+        name: 'd_mlg',
+        label: '&Delta;Mlg',
+        description: 'Delta milleage between NRIs',
+        read_only: true,
+        default_value: 0,
+        format_cb: RallyInstruction.prototype.parseFloat,
+        calc_always_cb: function calc_always_cb(rally, prev, cur) {
+            return rally.adjustMilleage(cur.raw_d_mlg.value);
+        }
+    }, {
+        name: 'cas',
+        label: 'CAS',
+        description: 'Change Average Speed',
+        default_value: 0,
+        format_cb: RallyInstruction.prototype.parseInt,
+        calc_if_prev_cb: function calc_if_prev_cb(rally, prev, cur) {
+            return prev.cas.value;
+        }
+    }, {
+        name: 'delay',
+        label: 'Delay',
+        description: 'An additional delay at instruciton',
+        default_value: 0,
+        format_cb: RallyInstruction.prototype.parseFloat
+    }, {
+        name: 'tod',
+        label: 'TOD',
+        description: 'Time Of Day: Calculated from rally-speed and milleage, can be overriden as needed',
+        format_cb: RallyInstruction.prototype.parseInt,
+        calc_if_prev_cb: function calc_if_prev_cb(rally, prev, cur) {
+            var value = prev.tod.value;
+            value += (cur.d_time.value + prev.err_time.value) * 1000;
+            return value;
+        }
+    }, {
+        name: 'time',
+        label: 'Time',
+        description: 'Stop-watch time in seconds since start of rally',
+        default_value: 0,
+        read_only: true,
+        format_cb: RallyInstruction.prototype.parseInt,
+        calc_if_prev_cb: function calc_if_prev_cb(rally, prev, cur) {
+            return prev.time.value + cur.d_time.value;
+        }
+    }, {
+        name: 'd_time',
+        label: '&Delta;Time',
+        description: 'Delta time between NRIs',
+        default_value: 0,
+        read_only: true,
+        format_cb: RallyInstruction.prototype.parseFloat,
+        calc_if_prev_cb: function calc_if_prev_cb(rally, prev, cur) {
+            var value = cur.raw_d_mlg.value * 3600;
+            value /= prev.cas.value;
+            value += cur.delay;
+            return value;
+        }
+    }, {
+        name: 'err_time',
+        label: 'Err Time',
+        description: 'Error time at this NRI',
+        default_value: 0,
+        read_only: true,
+        format_cb: RallyInstruction.prototype.parseFloat,
+        calc_if_prev_cb: function calc_if_prev_cb(rally, prev, cur) {
+            var value = 0;
+            if (cur.tod.isSet()) {
+                value = prev.tod.value - cur.tod.value;
+                value /= 1000;
+                value += cur.d_time.value + prev.err_time.value;
+            }
+            return value;
+        }
+    }, {
+        name: 'notes',
+        label: 'Notes'
+    }];
+
+    RallyInstruction.prototype.column_defs_display_order.forEach(function (col) {
+        RallyInstruction.prototype.column_defs_by_name[col.name] = col;
+    });
+
+    RallyInstruction.prototype.column_defs_calc_order = ['instr', 'raw_d_mlg', 'd_mlg', 'mlg', 'cas', 'd_time', 'time', 'tod', 'raw_mlg', 'err_time'];
+})();
+//# sourceMappingURL=rally.js.map
