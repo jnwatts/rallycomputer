@@ -553,9 +553,11 @@ RallyUI.prototype = {
                         ui.timerResetLaps();
                     }
                     break;
+                case 189: // DASH
                 case 109: // KP_MINUS
                     ui.insertInstruction(e.shiftKey ? -1 : -0.5);
                     break;
+                case 187: // EQUAL SIGN
                 case 107: // KP_PLUS
                     ui.insertInstruction(e.shiftKey ? 1 : 0.5);
                     break;
