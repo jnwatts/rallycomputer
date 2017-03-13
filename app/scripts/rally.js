@@ -37,6 +37,46 @@ Rally.prototype = {
         return Date.now() + this.cachedClockAdj * 1000.0;
     },
 
+    serialize: function() {
+        var rally = this;
+        var rally_obj = {};
+        rally_obj.config = {};
+        //TODO: Replace localStorage.forEach with direct usage of each param
+        Object.keys(window.localStorage).forEach(function (key) {
+            rally_obj.config[key] = window.localStorage.getItem(key);
+        });
+        return new Promise(function (resolve, reject) {
+            rally.db.instructions.orderBy(':id').toArray(function (rows) {
+                rally_obj.instructions = rows;
+                resolve(rally_obj);
+            }).catch(function (err) {
+                reject(err);
+            });
+        });
+     },
+
+     deserialize: function(rally_obj) {
+        //TODO: White-list of storage keys?
+        //TODO: Validate instruction keys/values
+        var rally = this;
+
+        if (rally_obj.config) {
+            Object.keys(rally_obj.config).forEach(function (key) {
+                rally.setConfig(key, rally_obj.config[key]);
+            });
+        }
+        var promises = [];
+        if (rally_obj.instructions) {
+            rally.db.instructions.clear();
+            rally_obj.instructions.forEach(function (instruction) {
+                promises.push(rally.db.instructions.put(instruction));
+            });
+        }
+        return Promise.all(promises).then(function () {
+            return rally.calculate();
+        });
+     },
+
     calculate: function() {
         var rally = this;
         var prev = null;
