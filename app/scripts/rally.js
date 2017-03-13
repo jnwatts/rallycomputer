@@ -14,7 +14,7 @@ Rally.prototype = {
     last_instr: null,
 
     init: function() {
-        var db = this.db = new Dexie('MyDatabase');
+        var db = this.db = new Dexie('RallyComputer');
 
         // Define a schema
         db.version(1).stores({
