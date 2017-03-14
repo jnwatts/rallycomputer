@@ -37,7 +37,7 @@ window.RallyUI = function(rally) {
         reader.onload = function(e) {
             var rally_json = e.target.result;
             ui.import(rally_json);
-        }
+        };
         reader.readAsText(files[0]);
     });
 
